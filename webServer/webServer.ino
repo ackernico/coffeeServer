@@ -3,6 +3,7 @@
 
 const char* ssid = "Nicolas_2.4G";
 const char* pass = "nicolas2006";
+
 WebServer server(80);
 
 void webpage()
@@ -26,7 +27,7 @@ void setup() {
   Serial.print("IP Address: ");
   Serial.println(WiFi.localIP());
 
-  server.on("/", handleRoot);
+  server.on("/", webpage);
 
   server.begin();
   Serial.println("Server initialized!");
