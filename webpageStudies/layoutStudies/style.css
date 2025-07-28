@@ -1,0 +1,77 @@
+@font-face {
+    font-family: nerdFont;
+    src: url(assets/nerdFont.ttf);
+}
+
+body
+{
+    background-color: rgba(222, 184, 135, 0.552);
+}
+
+.mainTitle
+{
+    padding: 30px;
+    width: 100%;
+    
+    background-color: rgb(61, 46, 27);
+    color: wheat;
+
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    margin: 0 auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+.mainTitle:hover
+{
+    font-size: 18px;
+}
+
+.container
+{
+    padding-right: 20px;
+    font-size: 20px;
+    width: 200px;
+
+    background-color: rgb(61, 46, 27);
+    color: wheat;
+    
+    font-family: nerdFont;
+    display: flex;
+    align-items: center;
+    justify-content: end;
+}
+.container:hover
+{
+    color: rgb(61, 46, 27);
+    background-color: wheat;
+}
+
+.sideIcons
+{
+    width : 25px;
+    height: 25px;
+    padding-left: 7px;
+}
+
+aside
+{
+    float: right;
+}
+
+a, a:hover, a:visited
+{
+    text-decoration: none;
+    color: wheat;
+}
+
+ul
+{
+    line-height: 65px;
+    list-style-type: none;
+    display: inline-block;
+    justify-content: right;
+    align-items: end;
+    text-align: end;
+}
