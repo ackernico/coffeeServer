@@ -1,22 +1,81 @@
-html
+body
 {
-    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    background-color: black;
 }
 
-.button
+.mainTitle
 {
-    color: white;
-    font-weight: bold;
-    display: inline-block;
-    padding: 16px 40px;
+    padding: 30px;
+    width: auto;
+    
+    background-color: rgb(61, 46, 27);
+    color: wheat;
+
+    font-family: monospace;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
 }
 
-.b1
+#container
 {
-    background-color: green;
+    font-size: 22px;
+    width: 71px;
+
+    list-style-type: none;
+    justify-content: right;
+    align-items: end;
+    text-align: end;
+}
+#container:hover
+{
+    width: 220px;
+}
+#container:hover .sideText
+{
+    visibility: visible;
 }
 
-.b2
+.slide
 {
-    background-color: red;
+    padding-bottom: 22px;
+    padding-top: 22px;
+    padding-right: 20px;
+
+    background-color: rgb(61, 46, 27);
+    color: wheat;
+    
+    font-family: monospace;
+    display: flex;
+    justify-content: end;
+    align-items: center;
+}
+.slide:hover
+{   
+    color: rgb(61, 46, 27);
+    background-color: rgb(255, 215, 162);
+}
+
+.sideIcons
+{   
+    width : 30px;
+    height: 30px;
+    padding-left: 12px;
+}
+
+.sideText
+{
+    visibility: hidden;
+}
+
+aside
+{
+    float: right;
+}
+
+a, a:hover, a:visited
+{
+    text-decoration: none;
+    color: wheat;
 }
