@@ -1,15 +1,45 @@
+*
+{
+    padding: 0;
+    margin: 0;
+    font-family: test;
+}
+
+@font-face {
+    font-family: test;
+    src: url(SyneMono-Regular.ttf);
+}
+
 body
 {
-    background-color: black;
+    background-color: rgb(242, 234, 211);
+    display : flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+main
+{
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 30px;
+}
+
+main #side-container
+{
+    justify-content: flex-start;
 }
 
 .mainTitle
 {
-    padding: 30px;
-    width: auto;
+    padding-top: 35px;
+    padding-bottom: 35px;
+    font-size: large;
     
-    background-color: rgb(61, 46, 27);
-    color: wheat;
+    background-color: rgb(63, 35, 5);
+    background-image: url("/coffeeServer/backupImages/naosei.png");
+    color: rgb(245, 245, 245);
 
     font-family: monospace;
     display: flex;
@@ -18,64 +48,72 @@ body
     text-align: center;
 }
 
-#container
+#side-container
 {
     font-size: 22px;
-    width: 71px;
+    width: 230px;
 
     list-style-type: none;
-    justify-content: right;
-    align-items: end;
-    text-align: end;
+    justify-content: left;
+    align-items: start;
+    text-align: start;
+    display: inline-block;
 }
-#container:hover
+
+#display-container
 {
-    width: 220px;
+    border-radius: 20px;
+    width: 1260px;
+    height: 680px;
+    
+    color : rgb(245, 245, 245);
+    background-color: rgb(63, 35, 5);
+
+    text-align:center;
 }
-#container:hover .sideText
+
+#power
 {
-    visibility: visible;
+    border-top-right-radius: 20px;
+}
+#info
+{
+    border-bottom-right-radius: 20px;
 }
 
 .slide
 {
-    padding-bottom: 22px;
-    padding-top: 22px;
-    padding-right: 20px;
+    padding-bottom: 30px;
+    padding-top: 30px;
 
-    background-color: rgb(61, 46, 27);
-    color: wheat;
+    background-color: rgb(63, 35, 5);
+    color: rgb(245, 245, 245);
     
     font-family: monospace;
     display: flex;
-    justify-content: end;
+    justify-content: start;
     align-items: center;
 }
 .slide:hover
 {   
-    color: rgb(61, 46, 27);
-    background-color: rgb(255, 215, 162);
+    color: rgb(84, 51, 16);
+    background-color: rgb(143, 116, 89);
+    cursor: pointer;
+}
+
+.active
+{
+    background-color: rgb(219, 188, 157);
 }
 
 .sideIcons
 {   
-    width : 30px;
-    height: 30px;
-    padding-left: 12px;
-}
-
-.sideText
-{
-    visibility: hidden;
-}
-
-aside
-{
-    float: right;
+    padding-left: 20px;
+    margin-right: 15px;
 }
 
 a, a:hover, a:visited
 {
     text-decoration: none;
-    color: wheat;
+    color: rgb(248, 244, 225);
 }
