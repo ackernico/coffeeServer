@@ -64,6 +64,14 @@ void setup() {
     request->send(LittleFS, "/style.css", "text/css");
   });
 
+   server.on("/script.js", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send(LittleFS, "/script.js", "text/js");
+  });
+
+  server.on("/SyneMono-Regular.ttf", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send(LittleFS, "/SyneMono-Regular.ttf", "text/ttf");
+  });
+
   server.on("/on", HTTP_GET, [](AsyncWebServerRequest *request){
     digitalWrite(clockWisePin, HIGH);    
     request->send(LittleFS, "/index.html", String(), false, processor);
