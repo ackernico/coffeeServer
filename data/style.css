@@ -5,6 +5,16 @@
     font-family: test;
 }
 
+:root
+{
+    --tone1 : whitesmoke;
+    --tone2 : rgb(40, 37, 37);
+        --tone3h5 : rgb(40, 37, 37, 0.5);
+    --tone3 : rgb(20, 5, 5);
+    --tone4 : rgb(39, 19, 19);  
+        --tone4h5 : rgb(76, 40, 40); 
+}
+
 @font-face {
     font-family: test;
     src: url(SyneMono-Regular.ttf);
@@ -12,7 +22,7 @@
 
 body
 {
-    background-color: rgb(242, 234, 211);
+    background-color: var(--tone4);
     display : flex;
     flex-direction: column;
     min-height: 100vh;
@@ -37,7 +47,7 @@ main #side-container
     padding-bottom: 35px;
     font-size: large;
     
-    background-color: rgb(63, 35, 5);
+    background-color: var(--tone3);
     background-image: url("/coffeeServer/backupImages/naosei.png");
     color: rgb(245, 245, 245);
 
@@ -60,19 +70,7 @@ main #side-container
     display: inline-block;
 }
 
-#display-container
-{
-    border-radius: 20px;
-    width: 1260px;
-    height: 680px;
-    
-    color : rgb(245, 245, 245);
-    background-color: rgb(63, 35, 5);
-
-    text-align:center;
-}
-
-#power
+#home
 {
     border-top-right-radius: 20px;
 }
@@ -81,29 +79,114 @@ main #side-container
     border-bottom-right-radius: 20px;
 }
 
-.slide
+#display-container
+{
+    border-radius: 20px;
+    width: 1260px;
+    height: 680px;
+    
+    color : var(--tone1);
+    background-color: var(--tone2);
+}
+
+#sectionContent
+{
+    display: flex;
+    flex: row;
+    justify-content: space-between;
+    align-items: center;
+    height: 100%;
+}
+
+#upText
+{
+    padding-top: 15px;
+    font-size: 18px;
+
+    text-align: center;
+}
+
+#powerSection
+{
+    width: 50%;
+    height: 50%;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+#powerSection button
+{
+    padding: 35px 30px 35px 30px;
+    margin-top: 5px;
+    margin-bottom: 10px;
+    font-size: 30px;
+    border-radius: 15px;
+    width: 40%;
+    border: none;
+
+    background-color: var(--tone4);
+    color : var(--tone1);
+
+    display: block;
+    flex-direction: row;
+    justify-content: center;
+}
+#powerSection button:hover
+{
+    cursor: pointer;
+    background-color: var(--tone4h5);
+}
+
+#powerSection input
+{
+    -webkit-appearance: none;
+    border-radius: 10px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+#powerSection th, tr, table
+{
+    border: 2px solid white;
+    padding: 5px 30px 5px 30px;
+}
+
+#recentTable
+{
+    padding-right: 30px;
+    
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+}
+
+.sections
 {
     padding-bottom: 30px;
     padding-top: 30px;
 
-    background-color: rgb(63, 35, 5);
-    color: rgb(245, 245, 245);
+    background-color: var(--tone3);
+    color: var(--tone1);
     
     font-family: monospace;
     display: flex;
     justify-content: start;
     align-items: center;
 }
-.slide:hover
+.sections:hover
 {   
-    color: rgb(84, 51, 16);
-    background-color: rgb(143, 116, 89);
+    color: var(--tone1);
+    background-color: var(--tone3h5);
     cursor: pointer;
 }
 
 .active
 {
-    background-color: rgb(219, 188, 157);
+    background-color: var(--tone2);
 }
 
 .sideIcons
@@ -117,3 +200,4 @@ a, a:hover, a:visited
     text-decoration: none;
     color: rgb(248, 244, 225);
 }
+
