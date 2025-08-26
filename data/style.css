@@ -5,14 +5,12 @@
     font-family: test;
 }
 
-:root
-{
-    --tone1 : whitesmoke;
-    --tone2 : rgb(40, 37, 37);
-        --tone3h5 : rgb(40, 37, 37, 0.5);
-    --tone3 : rgb(20, 5, 5);
-    --tone4 : rgb(39, 19, 19);  
-        --tone4h5 : rgb(76, 40, 40); 
+:root {
+    --tone1: #f5f5f5;
+    --tone2: #3d3236;
+    --tone3: #2c2126;
+    --tone4: #5c3b45;
+    --text: #f0ebe8;
 }
 
 @font-face {
@@ -22,7 +20,7 @@
 
 body
 {
-    background-color: var(--tone4);
+    background-color: var(--tone1);
     display : flex;
     flex-direction: column;
     min-height: 100vh;
@@ -47,9 +45,8 @@ main #side-container
     padding-bottom: 35px;
     font-size: large;
     
-    background-color: var(--tone3);
-    background-image: url("/coffeeServer/backupImages/naosei.png");
-    color: rgb(245, 245, 245);
+    background-color: var(--tone2);
+    color: var(--text);
 
     font-family: monospace;
     display: flex;
@@ -85,7 +82,7 @@ main #side-container
     width: 1260px;
     height: 680px;
     
-    color : var(--tone1);
+    color : var(--text);
     background-color: var(--tone2);
 }
 
@@ -124,44 +121,72 @@ main #side-container
     margin-bottom: 10px;
     font-size: 30px;
     border-radius: 15px;
+    border: 2px solid var(--tone3);
     width: 40%;
-    border: none;
 
     background-color: var(--tone4);
-    color : var(--tone1);
+    color : var(--text);
 
-    display: block;
+    display: flex;
     flex-direction: row;
     justify-content: center;
+    align-items: center;
 }
 #powerSection button:hover
 {
     cursor: pointer;
-    background-color: var(--tone4h5);
+    background-color: var(--tone3);
+}
+
+#powerSection > p
+{
+    margin-top: 10px;
+    font-size: 18px;
+}
+#powerSection img
+{
+    padding-right: 10px;
+    height: 32px;
+    flex-direction: row;
+    align-items: center;
 }
 
 #powerSection input
 {
     -webkit-appearance: none;
+    opacity: 1;
+
+    background-color: var(--tone4);
+
     border-radius: 10px;
-    margin-top: 20px;
+    margin-top: 10px;
     margin-bottom: 20px;
 }
-
-#powerSection th, tr, table
+#powerSection input:hover
 {
-    border: 2px solid white;
-    padding: 5px 30px 5px 30px;
+    opacity: 0.82;
+    cursor: pointer;
+}
+
+table, td, th
+{
+    background-color: var(--tone4);
+    text-align: center;
+    border: 2px solid black;
+}
+
+table {border-collapse: collapse;}
+
+#duration {padding: 0 15px 0 15px;}
+
+#powerSection th, td
+{
+    padding: 15px 20px 15px 20px;
 }
 
 #recentTable
 {
     padding-right: 30px;
-    
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
 }
 
 .sections
@@ -169,8 +194,8 @@ main #side-container
     padding-bottom: 30px;
     padding-top: 30px;
 
-    background-color: var(--tone3);
-    color: var(--tone1);
+    background-color: var(--tone2);
+    color: var(--text);
     
     font-family: monospace;
     display: flex;
@@ -179,14 +204,15 @@ main #side-container
 }
 .sections:hover
 {   
-    color: var(--tone1);
-    background-color: var(--tone3h5);
+    color: whitesmoke;
+    background-color: var(--tone3);
     cursor: pointer;
 }
 
 .active
 {
-    background-color: var(--tone2);
+    background-color: var(--tone4);
+    color: var(--text);
 }
 
 .sideIcons
