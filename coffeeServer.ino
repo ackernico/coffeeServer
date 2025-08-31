@@ -1,5 +1,6 @@
 #include <WiFi.h>
 #include <ESPAsyncWebServer.h>
+#include <ArduinoJson.h>
 #include <LittleFS.h>
 
 /*Network credentials*/
@@ -12,27 +13,12 @@ const int clockWisePin = 33;
 /*Auxiliar variables*/
 String grinderState;
 
+ /*Global variables to store the webpage data*/
+unsigned int grindThickness;
+bool grinderStatus;
+
 /*Creating AsyncWebServer object on port 80*/
 AsyncWebServer server(80);
-
-String processor(const String& var)
-{
-  Serial.println(var);
-  if(var == "STATE")
-  {
-    if(digitalRead(clockWisePin))
-    {
-      grinderState = "ON";
-    }
-    else
-    {
-      grinderState = "OFF";
-    }
-    Serial.println(grinderState);
-    return grinderState;
-  }
-  return String();
-}
 
 void setup() {
   Serial.begin(115200);
@@ -54,6 +40,8 @@ void setup() {
   Serial.println("Connected!");
   Serial.println(WiFi.localIP());
 
+  DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
+
   // Route for root / web page
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
     request->send(LittleFS, "/index.html", String(), false, processor);
@@ -71,22 +59,59 @@ void setup() {
   server.on("/SyneMono-Regular.ttf", HTTP_GET, [](AsyncWebServerRequest *request){
     request->send(LittleFS, "/SyneMono-Regular.ttf", "text/ttf");
   });
-
-  server.on("/on", HTTP_GET, [](AsyncWebServerRequest *request){
-    digitalWrite(clockWisePin, HIGH);    
-    request->send(LittleFS, "/index.html", String(), false, processor);
-  });
   
   // Route to set GPIO to LOW
-  server.on("/off", HTTP_GET, [](AsyncWebServerRequest *request){
-    digitalWrite(clockWisePin, LOW);    
-    request->send(LittleFS, "/index.html", String(), false, processor);
-  });
+  server.on("/on", HTTP_POST, [](AsyncWebServerRequest *request){},
+  NULL, [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) 
+    {
+      Serial.println("Ring Ring Ring! POST method is calling!");
+      String body;
+      for(size_t i=0 ; i<len ; i++)
+      {
+        body += (char)data[i];
+      }
+      Serial.println("Received message: " + body);
 
+      StaticJsonDocument<200> doc;
+      DeserializationError err = deserializeJson(doc, body);
+      if(err)
+      {
+        request->send(400, "application/json", "{\"error\":\"invalidJSON\"}");
+        return;
+      }
+
+      const char* status = doc["status"];
+      const char* thickness = doc["thickness"];
+
+      grinderStatus = status;
+      grindThickness = thickness;
+
+      Serial.printf("Status: %s\n", status);
+      Serial.printf("Thickness: %s\n", thickness);
+
+      String response;
+      StaticJsonDocument<200> respDoc;
+      respDoc["received"] = true;
+      respDoc["status"] = status;
+      respDoc["thickness"] = thickness;
+      serializeJson(respDoc, response);
+
+      request->send(200, "application/json", response);
+    });
+
+    server.on("/on", HTTP_OPTIONS, [](AsyncWebServerRequest *request)
+    {
+      AsyncWebServerResponse *response = request->beginResponse(204);
+      response->addHeader("Access-Control-Allow-Origin", "*");
+      response->addHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+      response->addHeader("Access-Control-Allow-Headers", "Content-Type");
+      request->send(response);
+    });
+  
   server.begin();
 }
 
-void loop() {
+void loop() 
+{
   // put your main code here, to run repeatedly:
-
 }
