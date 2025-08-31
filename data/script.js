@@ -1,23 +1,32 @@
 const sections = document.querySelectorAll('.sections');
 const getActive = document.getElementById('active');
+const display = document.getElementById('display-container');
+const homeButtons = document.querySelectorAll('.homeButton');
+const initalContent = document.getElementById('startContent');
+const startData = 
+{
+    "status" : null,
+    "thickness" : null
+};
 const sectionContent = 
 {
     home: `
     <div id="upText">
         <h2>Homepage</h2>
     </div>    
-    <div id="sectionContent">
+    <div class="sectionContent">
         <div id="powerSection">
-                <h2>Power</h2>
-                <button>
-                    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAQAAADZc7J/AAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAACYktHRAD/h4/MvwAAAAd0SU1FB+kHHRIlCvpI/V8AAAH7SURBVEjHnZWxSyNBGMXfjoukM+SCBItgkcpCYrOFxREOzuLqq/wbrIJYipVYWKW2POxsU5jjuPIQCVeKBIslWEhYUoaY8LsiyWYmye7mfNV837z35ptvdmalRJDjmpCQa3L6CLhlhtuPyEuMYoMRpSSeSXQoaSMebyjbgBJ7a1e3N6/In6by+qkhgTdaQ+7rh3w+e/15ytAE4NyiVbFRtWbOAWgy3z4nU9qA/SwD9hlMcyez1Db9mNjGTzPApx3n+mxPmljXVlzMgc5SG3Cmg3i8pbokNulZK42opVZQs74O6LEpjhziTWYPbpz8kVHNKnCsq8xTvNLYimpG1gGp7XWy9F5HbSusGlWs8I81jhxdlMCqGBWssGutFKoVBy0vXM1SIfkySce607vedafjZJKvSJ/iaMfZbU/fyUneYEFjsyKjFysMllo2WJK7rBejR3uKsjJA2TF4FIfOh9HINGg4/ENh6FqJIUGqPGBosbsYSVw4nmHyNigTOtyLSbpoXeeJRZCwuivvU5xNneJiSMOtgzINp3iAU0nyJAlfTX1dWHCsBz3oVdKOAgXWGz1BS9+sF5QCz/wPniksGLLL09ryJ3ZXNanI/Vry+7h5SxaGOlGqOKJO2gWUyHPJ20rxG5fkF/neShNfNX1RVRUVJEXq6K9+6feq/9Y/3oeew38Tm/MAAAAldEVYdGRhdGU6Y3JlYXRlADIwMjUtMDctMjlUMTg6Mzc6MTArMDA6MDB09MudAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDI1LTA3LTI5VDE4OjM3OjEwKzAwOjAwBalzIQAAACh0RVh0ZGF0ZTp0aW1lc3RhbXAAMjAyNS0wNy0yOVQxODozNzoxMCswMDowMFK8Uv4AAAAASUVORK5CYII=">
-                    <p>ON</p>
-                </button>
+            <h2>Power</h2>
+            <button class="homeButton" onclick="toggleStart()"> 
+                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAQAAADZc7J/AAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAACYktHRAD/h4/MvwAAAAd0SU1FB+kHHRIlCvpI/V8AAAH7SURBVEjHnZWxSyNBGMXfjoukM+SCBItgkcpCYrOFxREOzuLqq/wbrIJYipVYWKW2POxsU5jjuPIQCVeKBIslWEhYUoaY8LsiyWYmye7mfNV837z35ptvdmalRJDjmpCQa3L6CLhlhtuPyEuMYoMRpSSeSXQoaSMebyjbgBJ7a1e3N6/In6by+qkhgTdaQ+7rh3w+e/15ytAE4NyiVbFRtWbOAWgy3z4nU9qA/SwD9hlMcyez1Db9mNjGTzPApx3n+mxPmljXVlzMgc5SG3Cmg3i8pbokNulZK42opVZQs74O6LEpjhziTWYPbpz8kVHNKnCsq8xTvNLYimpG1gGp7XWy9F5HbSusGlWs8I81jhxdlMCqGBWssGutFKoVBy0vXM1SIfkySce607vedafjZJKvSJ/iaMfZbU/fyUneYEFjsyKjFysMllo2WJK7rBejR3uKsjJA2TF4FIfOh9HINGg4/ENh6FqJIUGqPGBosbsYSVw4nmHyNigTOtyLSbpoXeeJRZCwuivvU5xNneJiSMOtgzINp3iAU0nyJAlfTX1dWHCsBz3oVdKOAgXWGz1BS9+sF5QCz/wPniksGLLL09ryJ3ZXNanI/Vry+7h5SxaGOlGqOKJO2gWUyHPJ20rxG5fkF/neShNfNX1RVRUVJEXq6K9+6feq/9Y/3oeew38Tm/MAAAAldEVYdGRhdGU6Y3JlYXRlADIwMjUtMDctMjlUMTg6Mzc6MTArMDA6MDB09MudAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDI1LTA3LTI5VDE4OjM3OjEwKzAwOjAwBalzIQAAACh0RVh0ZGF0ZTp0aW1lc3RhbXAAMjAyNS0wNy0yOVQxODozNzoxMCswMDowMFK8Uv4AAAAASUVORK5CYII=">
+                <p>ON</p>
+            </button>
+            <div id="startContent">
                 <p>Grind thickness</p>
-                <input class="slider" type="range" min="1" max="23">
+                <input id="thickness" type="range" min="0" max="22" step="1" name="thick">
                 <h2>Saved profile</h2>
-                <button id="favoriteMethod">
-                </button>
+                <button class="homeButton" id="favoriteMethod"></button>
+            </div>
         </div>
         <div id="recentTable">
             <table>
@@ -61,7 +70,17 @@ const sectionContent =
     </div>
     `,
     schedule: `
-        <h1>I am shakespeare in the flesh</h1>
+        <div id="upText">
+            <h2>Schedule</h2>
+        </div>
+        <div class="sectionContent">
+            <div id="alarmContainer">
+                <button id="newAlarm">
+                    <img class="sideIcons" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAZElEQVRYR+2WSQoAMAgD6/8f3Q3sqVsKxct4ViMDRi09RK4xK7Maaju5YCXuwuoQDAABCEAAAp3AyV5Vf7/Nb7ZtUeLjdjAABMIJhK/h7c563okYLxkEIAABCHwnsLsdqnjrVQBAm4AJubvCowAAAABJRU5ErkJggg==">
+                    <p>Add new alarm</p>
+                </button>
+            </div>
+        </div>
     `,
     profiles: `
         <h1>Walt disney</h1>
@@ -96,6 +115,7 @@ const methods =
     <p>Moka pot</p>
     `,
 };
+
 const method = 'v60';
 
 function loadFavorite(content)
@@ -103,19 +123,56 @@ function loadFavorite(content)
     document.getElementById('favoriteMethod').innerHTML = methods[content];
 }
 
+function toggleStart()
+{
+    //Getting input slider tick
+    const thicknessSelect = document.getElementById('thickness');
+    startData.status = "on";
+    startData.thickness = thicknessSelect.value;
+
+    //Hiding initial content
+
+    //HTTP request
+    fetch("http://192.168.0.7/on", 
+    {
+        method : "POST",
+        headers : {"Content-Type" : "application/json"},
+        body : JSON.stringify(startData)
+    })
+        .then(res=> 
+        {
+            if(!res.ok) throw new Error(res.status);
+            return res.text();
+        })
+        .then(data =>
+        {
+            console.log("ESP32 responded with: ", data);
+        })
+        .catch(err => 
+        {
+            console.log("Error during the process: ", err);
+        });
+}
+
 document.addEventListener('DOMContentLoaded', () =>
 {
     document.getElementById('home').classList.add('active');
-    document.getElementById('display-container').innerHTML = sectionContent['home'];
+    display.innerHTML = sectionContent['home'];
+    display.classList.add('show');
     loadFavorite(method);
 });
 
 sections.forEach(sec =>
 {
     sec.addEventListener('click', () => {
+        display.classList.remove('show');
         sections.forEach(j => j.classList.remove('active'));
         sec.classList.add('active');
-        document.getElementById('display-container').innerHTML = sectionContent[sec.id];
-        loadFavorite(method);
+        setTimeout(() => 
+        {
+            display.classList.add('show');
+            display.innerHTML = sectionContent[sec.id];
+            loadFavorite(method);
+        }, 200);
     });
 });
