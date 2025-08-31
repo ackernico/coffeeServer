@@ -16,7 +16,7 @@
 
 @font-face {
     font-family: test;
-    src: url(SyneMono-Regular.ttf);
+    src: url(Inter.ttf);
 }
 
 body
@@ -131,13 +131,14 @@ main #side-container
     margin-bottom: 10px;
     font-size: 30px;
     border-radius: 15px;
-    border: none;
     width: 250px;
 
     background-color: var(--tone4);
     color : var(--text);
+    
     transition: all ease-in-out 150ms;
-
+    border: none;
+    font-weight: bold;
     display: flex;
     flex-direction: row;
     justify-content: center;
@@ -266,7 +267,7 @@ table {border-collapse: collapse;}
     background-color: var(--tone2);
     color: var(--text);
     
-    font-family: monospace;
+    font-weight: bold;
     display: flex;
     justify-content: start;
     align-items: center;
