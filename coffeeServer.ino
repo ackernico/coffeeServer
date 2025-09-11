@@ -14,8 +14,6 @@ const int clockWisePin = 33;
 String grinderState;
 
  /*Global variables to store the webpage data*/
-unsigned int grindThickness;
-bool grinderStatus;
 
 /*Creating AsyncWebServer object on port 80*/
 AsyncWebServer server(80);
@@ -44,7 +42,7 @@ void setup() {
 
   // Route for root / web page
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send(LittleFS, "/index.html", String(), false, processor);
+    request->send(LittleFS, "/index.html", String(), false);
   });
   
   // Route to load style.css file
@@ -56,8 +54,8 @@ void setup() {
     request->send(LittleFS, "/script.js", "text/js");
   });
 
-  server.on("/SyneMono-Regular.ttf", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send(LittleFS, "/SyneMono-Regular.ttf", "text/ttf");
+  server.on("/Inter.ttf", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send(LittleFS, "/Inter.ttf", "text/ttf");
   });
   
   // Route to set GPIO to LOW
@@ -82,9 +80,6 @@ void setup() {
 
       const char* status = doc["status"];
       const char* thickness = doc["thickness"];
-
-      grinderStatus = status;
-      grindThickness = thickness;
 
       Serial.printf("Status: %s\n", status);
       Serial.printf("Thickness: %s\n", thickness);

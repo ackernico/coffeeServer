@@ -79,6 +79,34 @@ const sectionContent =
                     <img class="sideIcons" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAZElEQVRYR+2WSQoAMAgD6/8f3Q3sqVsKxct4ViMDRi09RK4xK7Maaju5YCXuwuoQDAABCEAAAp3AyV5Vf7/Nb7ZtUeLjdjAABMIJhK/h7c563okYLxkEIAABCHwnsLsdqnjrVQBAm4AJubvCowAAAABJRU5ErkJggg==">
                     <p>Add new alarm</p>
                 </button>
+                <div class="alarms">
+                    <div class="alarmObject">
+                        <p class="alarmName">Placeholder</p>
+                        <div class="alarmData">
+                            <h2 class="alarmHour">06:30</h2>
+                            <div class="alarmToggle">
+                                <label class="switch">
+                                    <input class="alarmCheckbox" type="checkbox" onchange="toggleAlarm(this)" hidden></input>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                        <p class="alarmRepeat">No repeat</p>
+                    </div>
+                    <div class="alarmObject">
+                        <p class="alarmName">Placeholder</p>
+                        <div class="alarmData">
+                            <h2 class="alarmHour">09:42</h2>
+                            <div class="alarmToggle">
+                                <label class="switch">
+                                    <input class="alarmCheckbox" type="checkbox" onchange="toggleAlarm(this)" hidden></input>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                        <p class="alarmRepeat">No repeat</p>
+                    </div>
+                </div>
             </div>
         </div>
     `,
@@ -154,6 +182,14 @@ function toggleStart()
         });
 }
 
+function toggleAlarm(checkbox)
+{
+    const obj = checkbox.closest('.alarmObject');
+    const hour = obj.querySelector('.alarmHour').innerText;
+
+    console.log(hour);
+}
+
 document.addEventListener('DOMContentLoaded', () =>
 {
     document.getElementById('home').classList.add('active');
@@ -164,7 +200,8 @@ document.addEventListener('DOMContentLoaded', () =>
 
 sections.forEach(sec =>
 {
-    sec.addEventListener('click', () => {
+    sec.addEventListener('click', () => 
+    {
         display.classList.remove('show');
         sections.forEach(j => j.classList.remove('active'));
         sec.classList.add('active');
