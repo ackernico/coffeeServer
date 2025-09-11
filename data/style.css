@@ -87,7 +87,7 @@ main #side-container
     opacity: 0;
     color : var(--text);
     background-color: var(--tone2);
-    transition: all ease-in-out 200ms;
+    transition: all ease-in-out 150ms;
     flex-direction: row;
 }
 #display-container.show
@@ -107,7 +107,7 @@ main #side-container
 
 #upText
 {
-    padding-top: 15px;
+    padding-top: 20px;
     font-size: 18px;
 
     text-align: center;
@@ -227,36 +227,128 @@ table {border-collapse: collapse;}
     padding-left: 255px;
 }
 
-#newAlarm
-{
-    padding: 30px 40px 30px 0;
-    border-radius: 10px;
-    font-size: 20px;
-    
-    background-color: var(--tone4);
-    color: var(--text);
-    border: none;
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    transition: all ease-in-out 150ms;
-}
-#newAlarm:hover
-{
-    background-color: var(--tone3);
-    cursor: pointer;
-}
-
 #alarmContainer
 {
     width: 1000px;
     height: 550px;
 
     display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+}
+
+#newAlarm
+{
+    padding: 25px 40px 25px 15px;
+    border-radius: 10px;
+    font-size: 20px;
+    margin-bottom: 15px;
+    
+    background-color: var(--tone4);
+    color: var(--text);
+
+    border: none;
+    display: flex;
     flex-direction: row;
+    justify-content: start;
+    align-items: center;
+    text-align: center;
+    transition: all ease-in-out 150ms;
+}
+.newAlarm:hover
+{
+    background-color: var(--tone3);
+    cursor: pointer;
+}
+
+.alarms
+{
+    display: flex;
+    flex-direction: column;
     justify-content: center;
-    align-items: start;
+    align-items: center;
+
+    gap: 20px;
+    flex: 1;
+    width: 100%;
+}
+.alarmObject
+{
+    font-size: 18px;
+    width: 550px;
+    border-radius: 20px;
+    background-color: var(--tone4);
+}
+.alarmName
+{
+    margin: 15px 0 15px 20px;
+}
+.alarmHour
+{
+    margin: 0 0 0 15px;
+    font-size: 40px;
+}
+.alarmRepeat
+{
+    margin: 15px 0 15px 20px;
+}
+.alarmInfo
+{
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.alarmData
+{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+.alarmCheckbox:checked + .slider::after
+{
+    transform: translateX(40px);
+}
+
+.alarmCheckbox:checked + .slider
+{
+    background-color: var(--tone3);
+}
+
+.switch
+{
+    display: flex;
+    position: relative;
+    cursor: pointer;
+    background-color: var(--tone2);
+
+    margin: 0 20px 0 0;
+    width: 80px;
+    height: 40px;
+    border-radius: 20px;
+}
+.slider 
+{
+    position: absolute;
+    background-color: var(--tone2);
+
+    inset: 0;
+    border-radius: 20px;
+
+    transition: background-color 150ms;
+}
+.slider::after
+{
+    content: "";
+    height: 30px;
+    width: 30px;
+    border-radius: 20px;
+    margin: 5px 0 0 5px;
+    background-color: var(--text);
+
+    position: absolute;
+
+    transition: all ease-in-out 150ms;
 }
 
 .sections
