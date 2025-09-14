@@ -8,6 +8,15 @@ const startData =
     "status" : null,
     "thickness" : null
 };
+
+const alarmData = 
+{
+    "status": null,
+    "time": null,
+}
+
+let alarms = [];
+
 const sectionContent = 
 {
     home: `
@@ -75,36 +84,41 @@ const sectionContent =
         </div>
         <div class="sectionContent">
             <div id="alarmContainer">
-                <button id="newAlarm">
+                <button id="newAlarm" onclick="alarmEditor()">
                     <img class="sideIcons" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAZElEQVRYR+2WSQoAMAgD6/8f3Q3sqVsKxct4ViMDRi09RK4xK7Maaju5YCXuwuoQDAABCEAAAp3AyV5Vf7/Nb7ZtUeLjdjAABMIJhK/h7c563okYLxkEIAABCHwnsLsdqnjrVQBAm4AJubvCowAAAABJRU5ErkJggg==">
                     <p>Add new alarm</p>
                 </button>
-                <div class="alarms">
-                    <div class="alarmObject">
-                        <p class="alarmName">Placeholder</p>
-                        <div class="alarmData">
-                            <h2 class="alarmHour">06:30</h2>
-                            <div class="alarmToggle">
-                                <label class="switch">
-                                    <input class="alarmCheckbox" type="checkbox" onchange="toggleAlarm(this)" hidden></input>
-                                    <span class="slider"></span>
-                                </label>
+                <div id="alarmSection">
+                    <div id="alarms">
+                        <div class="alarmObject">
+                            <p class="alarmName">Placeholder</p>
+                            <div class="alarmData">
+                                <h2 class="alarmHour">06:30</h2>
+                                <div class="alarmToggle">
+                                    <label class="switch">
+                                        <input class="alarmCheckbox" type="checkbox" onchange="toggleAlarm(this)" hidden></input>
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
                             </div>
+                            <p class="alarmRepeat">No repeat</p>
                         </div>
-                        <p class="alarmRepeat">No repeat</p>
+                        <div class="alarmObject">
+                            <p class="alarmName">Placeholder</p>
+                            <div class="alarmData">
+                                <h2 class="alarmHour">09:42</h2>
+                                <div class="alarmToggle">
+                                    <label class="switch">
+                                        <input class="alarmCheckbox" type="checkbox" onchange="toggleAlarm(this)" hidden></input>
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                            <p class="alarmRepeat">No repeat</p>
+                        </div>
                     </div>
-                    <div class="alarmObject">
-                        <p class="alarmName">Placeholder</p>
-                        <div class="alarmData">
-                            <h2 class="alarmHour">09:42</h2>
-                            <div class="alarmToggle">
-                                <label class="switch">
-                                    <input class="alarmCheckbox" type="checkbox" onchange="toggleAlarm(this)" hidden></input>
-                                    <span class="slider"></span>
-                                </label>
-                            </div>
-                        </div>
-                        <p class="alarmRepeat">No repeat</p>
+                    <div id="alarmEditor">
+                        <h2>Alarm Editor</h2>
                     </div>
                 </div>
             </div>
@@ -144,11 +158,34 @@ const methods =
     `,
 };
 
-const method = 'v60';
+const method = 'melitta';
 
-function loadFavorite(content)
+function loadContent(content)
 {
-    document.getElementById('favoriteMethod').innerHTML = methods[content];
+    switch(content)
+    {
+        case 'home':
+            document.getElementById('favoriteMethod').innerHTML = methods[method];
+            break;
+        case 'schedule':
+            alarms.length = Array.from(document.querySelectorAll('#alarms .alarmObject')).length;
+            const cb = document.querySelectorAll('.alarmObject .alarmCheckbox');
+
+            document.querySelectorAll('.alarmObject').forEach((alarmE, i) =>
+            {
+                if(alarms.length > 0 && alarms[i] != undefined)
+                {
+                    if(alarms[i].status == true)
+                    {
+                        cb[i].checked = true;
+                    }
+                }
+            });
+            console.log(alarms);
+            break;
+        default:
+            break;
+    }
 }
 
 function toggleStart()
@@ -184,10 +221,31 @@ function toggleStart()
 
 function toggleAlarm(checkbox)
 {
-    const obj = checkbox.closest('.alarmObject');
-    const hour = obj.querySelector('.alarmHour').innerText;
+    const alarm = checkbox.closest('.alarmObject');
 
-    console.log(hour);
+    const alarmList = Array.from(document.querySelectorAll('#alarms .alarmObject'));
+    const index = alarmList.indexOf(alarm);
+
+    const hour = alarm.querySelector('.alarmHour').innerText;;
+
+    alarms[index] = 
+    {
+        status : checkbox.checked,
+        time: hour
+    };
+    console.log(alarms);
+}
+
+function alarmEditor()
+{
+    let editor = document.getElementById('alarmEditor');
+    let alarmsEl = document.getElementById('alarms');
+
+    console.log(document.getElementById('alarms').children);
+
+    editor.classList.add('show');
+    alarmsEl.classList.add('show');
+    
 }
 
 document.addEventListener('DOMContentLoaded', () =>
@@ -195,7 +253,7 @@ document.addEventListener('DOMContentLoaded', () =>
     document.getElementById('home').classList.add('active');
     display.innerHTML = sectionContent['home'];
     display.classList.add('show');
-    loadFavorite(method);
+    loadContent('home');
 });
 
 sections.forEach(sec =>
@@ -209,7 +267,7 @@ sections.forEach(sec =>
         {
             display.classList.add('show');
             display.innerHTML = sectionContent[sec.id];
-            loadFavorite(method);
+            loadContent(sec.id);
         }, 200);
     });
 });
