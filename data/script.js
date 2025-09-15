@@ -9,12 +9,6 @@ const startData =
     "thickness" : null
 };
 
-const alarmData = 
-{
-    "status": null,
-    "time": null,
-}
-
 let alarms = [];
 
 const sectionContent = 
@@ -158,7 +152,45 @@ const methods =
     `,
 };
 
-const method = 'melitta';
+const method = 'v60';
+
+async function talk2ESP32(method, route, jsonData)
+{
+    const aux = "http://192.168.0.7";
+    const address = aux + route;
+
+    const labels = 
+    {
+        method : method.toUpperCase(),
+        headers : {"Content-Type" : "application/json"},
+    }
+
+    if(labels.method !== "GET" && labels.method !== "HEAD" && jsonData !== undefined)
+    {
+        labels.body = JSON.stringify(jsonData);
+    }
+
+    try {
+        const res = await fetch(address, labels);
+        if (!res.ok) {
+            throw new Error(`HTTP ${res.status} ${res.statusText}`);
+        }
+
+        const ct = res.headers.get('content-type') || '';
+        if (ct.includes('application/json')) {
+            const data = await res.json();
+            console.log("ESP32 responded with:", data);
+            return data;
+        } else {
+            const text = await res.text();
+            console.log("ESP32 responded with:", text);
+            return text;
+        }
+    } catch (err) {
+        console.error("sendToESP32 error:", err);
+        throw err;
+    }
+}
 
 function loadContent(content)
 {
@@ -181,7 +213,6 @@ function loadContent(content)
                     }
                 }
             });
-            console.log(alarms);
             break;
         default:
             break;
@@ -190,33 +221,11 @@ function loadContent(content)
 
 function toggleStart()
 {
-    //Getting input slider tick
     const thicknessSelect = document.getElementById('thickness');
     startData.status = "on";
     startData.thickness = thicknessSelect.value;
 
-    //Hiding initial content
-
-    //HTTP request
-    fetch("http://192.168.0.7/on", 
-    {
-        method : "POST",
-        headers : {"Content-Type" : "application/json"},
-        body : JSON.stringify(startData)
-    })
-        .then(res=> 
-        {
-            if(!res.ok) throw new Error(res.status);
-            return res.text();
-        })
-        .then(data =>
-        {
-            console.log("ESP32 responded with: ", data);
-        })
-        .catch(err => 
-        {
-            console.log("Error during the process: ", err);
-        });
+    talk2ESP32("POST", "/on", startData);
 }
 
 function toggleAlarm(checkbox)
@@ -224,16 +233,20 @@ function toggleAlarm(checkbox)
     const alarm = checkbox.closest('.alarmObject');
 
     const alarmList = Array.from(document.querySelectorAll('#alarms .alarmObject'));
-    const index = alarmList.indexOf(alarm);
 
-    const hour = alarm.querySelector('.alarmHour').innerText;;
+    const index = alarmList.indexOf(alarm);
+    const hour = alarm.querySelector('.alarmHour').innerText;
+    const alarmName = alarm.querySelector('.alarmName').innerText;
 
     alarms[index] = 
     {
+        index : index,
         status : checkbox.checked,
-        time: hour
+        time : hour,
+        name : alarmName
     };
     console.log(alarms);
+    talk2ESP32("POST", "/alarms", alarms[index]);
 }
 
 function alarmEditor()
@@ -245,11 +258,22 @@ function alarmEditor()
 
     editor.classList.add('show');
     alarmsEl.classList.add('show');
-    
 }
 
-document.addEventListener('DOMContentLoaded', () =>
+document.addEventListener('DOMContentLoaded', async () =>
 {
+    try
+    {
+        const data = await talk2ESP32("GET", "/alarms");
+        if(Array.isArray(data)) alarms = data;
+    }
+    catch(err)
+    {
+        console.log("Failed to load alarms", err);
+    }
+
+    console.log(alarms);
+    
     document.getElementById('home').classList.add('active');
     display.innerHTML = sectionContent['home'];
     display.classList.add('show');
