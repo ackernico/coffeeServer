@@ -20,15 +20,15 @@ const sectionContent =
     <div class="sectionContent">
         <div id="powerSection">
             <h2>Power</h2>
-            <button class="homeButton" onclick="toggleStart()"> 
+            <button class="btn homeButton" onclick="toggleStart()"> 
                 <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAQAAADZc7J/AAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAACYktHRAD/h4/MvwAAAAd0SU1FB+kHHRIlCvpI/V8AAAH7SURBVEjHnZWxSyNBGMXfjoukM+SCBItgkcpCYrOFxREOzuLqq/wbrIJYipVYWKW2POxsU5jjuPIQCVeKBIslWEhYUoaY8LsiyWYmye7mfNV837z35ptvdmalRJDjmpCQa3L6CLhlhtuPyEuMYoMRpSSeSXQoaSMebyjbgBJ7a1e3N6/In6by+qkhgTdaQ+7rh3w+e/15ytAE4NyiVbFRtWbOAWgy3z4nU9qA/SwD9hlMcyez1Db9mNjGTzPApx3n+mxPmljXVlzMgc5SG3Cmg3i8pbokNulZK42opVZQs74O6LEpjhziTWYPbpz8kVHNKnCsq8xTvNLYimpG1gGp7XWy9F5HbSusGlWs8I81jhxdlMCqGBWssGutFKoVBy0vXM1SIfkySce607vedafjZJKvSJ/iaMfZbU/fyUneYEFjsyKjFysMllo2WJK7rBejR3uKsjJA2TF4FIfOh9HINGg4/ENh6FqJIUGqPGBosbsYSVw4nmHyNigTOtyLSbpoXeeJRZCwuivvU5xNneJiSMOtgzINp3iAU0nyJAlfTX1dWHCsBz3oVdKOAgXWGz1BS9+sF5QCz/wPniksGLLL09ryJ3ZXNanI/Vry+7h5SxaGOlGqOKJO2gWUyHPJ20rxG5fkF/neShNfNX1RVRUVJEXq6K9+6feq/9Y/3oeew38Tm/MAAAAldEVYdGRhdGU6Y3JlYXRlADIwMjUtMDctMjlUMTg6Mzc6MTArMDA6MDB09MudAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDI1LTA3LTI5VDE4OjM3OjEwKzAwOjAwBalzIQAAACh0RVh0ZGF0ZTp0aW1lc3RhbXAAMjAyNS0wNy0yOVQxODozNzoxMCswMDowMFK8Uv4AAAAASUVORK5CYII=">
                 <p>ON</p>
             </button>
             <div id="startContent">
-                <p>Grind thickness</p>
-                <input id="thickness" type="range" min="0" max="22" step="1" name="thick">
+                <p class="textLabels">Grind thickness</p>
+                <input class="thickness" type="range" min="0" max="22" step="1" name="thick">
                 <h2>Saved profile</h2>
-                <button class="homeButton" id="favoriteMethod"></button>
+                <button class="btn homeButton" id="favoriteMethod"></button>
             </div>
         </div>
         <div id="recentTable">
@@ -78,10 +78,7 @@ const sectionContent =
         </div>
         <div class="sectionContent">
             <div id="alarmContainer">
-                <button id="newAlarm" onclick="alarmEditor()">
-                    <img class="sideIcons" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAZElEQVRYR+2WSQoAMAgD6/8f3Q3sqVsKxct4ViMDRi09RK4xK7Maaju5YCXuwuoQDAABCEAAAp3AyV5Vf7/Nb7ZtUeLjdjAABMIJhK/h7c563okYLxkEIAABCHwnsLsdqnjrVQBAm4AJubvCowAAAABJRU5ErkJggg==">
-                    <p>Add new alarm</p>
-                </button>
+                <button id="newAlarm" class="btn" onclick="alarmEditor()">Add new alarm</button>
                 <div id="alarmSection">
                     <div id="alarms">
                         <div class="alarmObject">
@@ -112,7 +109,33 @@ const sectionContent =
                         </div>
                     </div>
                     <div id="alarmEditor">
-                        <h2>Alarm Editor</h2>
+                    <form id="alarmForm" autocomplete="off">
+                        <div id="upText">
+                            <input id="getName" type="text" placeholder="Alarm Label"></type>
+                        </div>
+                        <div id="editorContent">
+                            <div id="getTime">
+                                <span class="getTimeElement" onclick="adjustTime(this, 'h')"></span>
+                                <h1>:</h1>
+                                <span class="getTimeElement" onclick="adjustTime(this, 'm')"></span>
+                            </div>
+                            <label for="repeatButtons">Repeat</label>
+                            <div id="getRepeat">
+                                <input type="checkbox" name="S" class="btn repeatButtons" value="Su"></input> 
+                                <input type="checkbox" name="M" class="btn repeatButtons" value="Mo"></input>
+                                <input type="checkbox" name="T" class="btn repeatButtons" value="Tu"></input>
+                                <input type="checkbox" name="W" class="btn repeatButtons" value="We"></input>
+                                <input type="checkbox" name="T" class="btn repeatButtons" value="Th"></input>
+                                <input type="checkbox" name="F" class="btn repeatButtons" value="Fr"></input>
+                                <input type="checkbox" name="S" class="btn repeatButtons" value="Sa"></input>
+                            </div>
+                                <label for="thickness">Grind thickness</label>
+                                <input class="thickness" type="range" min="0" max="22" step="1" name="thick">
+                            </div>
+                            <div id="upText">
+                                <input id="saveAlarm" type="submit" value="Save"></input>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -153,6 +176,20 @@ const methods =
 };
 
 const method = 'v60';
+
+function adjustTime(timeElement, timeReset)
+{
+    let time = Number(timeElement.innerText);
+    let reset;
+    
+    if(timeReset == 'h') reset = 23;
+    else if(timeReset == 'm') reset = 59;
+
+    time = time + 1;
+    if(time >= reset) time = 0;
+
+    timeElement.innerText = String(time).padStart(2, '0');
+}
 
 async function talk2ESP32(method, route, jsonData)
 {
@@ -200,6 +237,11 @@ function loadContent(content)
             document.getElementById('favoriteMethod').innerHTML = methods[method];
             break;
         case 'schedule':
+            document.getElementById('getTime').querySelectorAll('.getTimeElement').forEach((element) =>
+            {
+                element.innerText = "00";
+            });
+
             alarms.length = Array.from(document.querySelectorAll('#alarms .alarmObject')).length;
             const cb = document.querySelectorAll('.alarmObject .alarmCheckbox');
 
@@ -221,9 +263,11 @@ function loadContent(content)
 
 function toggleStart()
 {
-    const thicknessSelect = document.getElementById('thickness');
+    const thicknessSelect = document.getElementById("startContent").querySelector('.thickness');
     startData.status = "on";
     startData.thickness = thicknessSelect.value;
+
+    console.log(startData);
 
     talk2ESP32("POST", "/on", startData);
 }

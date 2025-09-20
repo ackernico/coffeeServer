@@ -2,10 +2,12 @@
 {
     padding: 0;
     margin: 0;
+    text-decoration: none;
+    border: none;
     font-family: test;
 }
 
-:root 
+:root
 {
     --tone1: #ECDFCC;
     --tone2: #3C3D37;
@@ -109,8 +111,6 @@ main #side-container
 
 #upText
 {
-    height: 5%;
-    padding: 0 0 15px 0;
     font-size: 18px;
 
     text-align: center;
@@ -127,17 +127,15 @@ main #side-container
     align-items: center;
 }
 
-.homeButton
+.btn
 {
-    padding: 35px 30px 35px 30px;
     margin: 5px 0 10px 0;
     font-size: 30px;
-    border-radius: 20px;
-    width: 250px;
+    border-radius: 25px;
+    flex-shrink: 0;
 
-    background-color: var(--tone4);
     color : var(--text);
-    
+
     transition: all ease-in-out 150ms;
     border: none;
     font-weight: bold;
@@ -147,17 +145,25 @@ main #side-container
     align-items: center;
     text-align: center;
 }
-.homeButton:hover
+.btn:hover
 {
-    cursor: pointer;
     background-color: var(--tone3);
+    cursor: pointer;
+}
+
+.homeButton
+{
+    width: 250px;
+    height: 100px;
+
+    background-color: var(--tone4);
 }
 
 #powerSection > p
 {
     margin-top: 10px;
     font-size: 18px;
-}
+}   
 #powerSection img
 {
     padding-right: 10px;
@@ -166,7 +172,12 @@ main #side-container
     align-items: center;
 }
 
-#thickness
+label, .textLabels
+{
+    margin: 10px 0 10px 0;
+}
+
+.thickness
 {
     -webkit-appearance: none;
 
@@ -174,8 +185,7 @@ main #side-container
     
     width: 253px;
     border-radius: 20px;
-    margin-top: 10px;
-    margin-bottom: 20px;
+    margin: 0 0 10px 0;
     border: 3px solid var(--tone3);
     
     background: linear-gradient(
@@ -185,18 +195,18 @@ main #side-container
     );
     background-size: 11px 100%;
 }
-#thickness:hover
+.thickness:hover
 {
     cursor: pointer;
 }
-#thickness::-moz-range-thumb
+.thickness::-moz-range-thumb
 {
     background: var(--tone2);
     width: 11px;
     height: 20px;
     border: none;
 }
-#thickness::-webkit-slider-thumb {
+.thickness::-webkit-slider-thumb {
     -webkit-appearance: none;
     background: var(--tone2);
     width: 11px;
@@ -207,6 +217,10 @@ main #side-container
 #startContent
 {
     text-align: center;
+}
+#startContent p
+{
+    font-weight: bold;
 }
 
 table, td, th
@@ -233,7 +247,7 @@ table {border-collapse: collapse;}
 #alarmContainer
 {
     width: 100%;
-    height: 95%;
+    height: 100%;
 
     display: flex;
     flex-direction: column;
@@ -254,26 +268,20 @@ table {border-collapse: collapse;}
 
 #newAlarm
 {
-    padding: 25px 40px 25px 15px;
+    width: 250px;
+    height: 75px;
+    font-size: 18px;
 
-    border-radius: 20px;
-    font-size: 20px;
-    
     background-color: var(--tone4);
-    color: var(--text);
-
-    border: none;
-    display: flex;
-    flex-direction: row;
-    justify-content: start;
-    align-items: center;
-    text-align: center;
-    transition: all ease-in-out 150ms;
 }
 #newAlarm:hover
 {
     background-color: var(--tone3);
     cursor: pointer;
+}
+#newAlarm::before
+{
+    image
 }
 
 #alarms
@@ -297,18 +305,26 @@ table {border-collapse: collapse;}
     transform: translateX(0);
 }
 
+#alarmForm
+{
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
 #alarmEditor
 {
     width: 50%;
     height: 85%;
     margin: 0 20px 0 0;
-    padding: 10px 0 0 0;
+    padding: 25px 0 25px 0;
     border-radius: 20px;
     opacity: 0;
 
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     justify-content: center;
+    align-items: center;
     pointer-events: none;
     transition: all ease-in-out 150ms;
     
@@ -320,6 +336,116 @@ table {border-collapse: collapse;}
     opacity: 1;
     pointer-events: auto;
     transform: translateX(0);
+}
+
+#editorContent
+{
+    height: calc(100% - 50px);
+    
+    font-weight: bold;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+#getTime
+{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+    width: 50%;
+}
+#getTime h1
+{
+    font-size: 55px;
+}
+
+.getTimeElement
+{
+    width: 100px;
+    height: 90px;
+    border-radius: 25px;
+    font-size: 55px;
+    flex-shrink: 0;
+    
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+    background-color: var(--tone2);
+    color: var(--text);
+}
+
+#getRepeat
+{
+    gap: 5px;
+    
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+}
+.repeatButtons
+{
+    width: 50px;
+    height: 50px;
+    font-size: 18px;
+
+    -webkit-appearance: none;
+
+    background-color: var(--tone2);
+}
+.repeatButtons:checked
+{
+    background-color: var(--tone3);
+}
+.repeatButtons::before
+{
+    content: attr(name);
+    color: var(--text);
+    font-weight: bold;
+}
+
+#getName
+{
+    width: 350px;
+    height: 50px;
+    font-size: 23px;
+    border-radius: 15px;
+
+    background-color: var(--tone2);
+    color: var(--text);
+
+    text-align: center;
+    font-weight: bold;
+}
+#changeLabel:focus
+{
+    outline: none;
+    background-color: var(--tone3);
+}
+
+#saveAlarm
+{
+    width: 130px;
+    height: 60px;
+    border-radius: 20px;
+    font-size: 23px;
+
+    font-weight: bold;
+    text-align: center;
+
+    background-color: var(--tone2);
+    color: var(--text);
+    transition: all ease-in-out 150ms;
+}
+#saveAlarm:hover
+{
+    cursor: pointer;
+    background-color: var(--tone3);
 }
 
 .alarmObject
@@ -424,12 +550,6 @@ table {border-collapse: collapse;}
 {
     background-color: var(--tone4);
     color: var(--text);
-}
-
-.sideIcons
-{   
-    padding-left: 20px;
-    padding-right: 15px;
 }
 
 a, a:hover, a:visited
