@@ -1,0 +1,249 @@
+@import url(index.css);
+
+#alarmContainer
+{
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+}
+
+#alarmSection
+{
+    height: 95%;
+    width: 100%;
+    
+    display:flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}
+
+#newAlarm
+{
+    width: 250px;
+    height: 75px;
+    font-size: 20px;
+    gap: 10px;
+
+    background-color: var(--tone4);
+}
+#newAlarm:hover
+{
+    background-color: var(--tone3);
+    cursor: pointer;
+}
+#newAlarm::before
+{
+    content: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAZElEQVRYR+2WSQoAMAgD6/8f3Q3sqVsKxct4ViMDRi09RK4xK7Maaju5YCXuwuoQDAABCEAAAp3AyV5Vf7/Nb7ZtUeLjdjAABMIJhK/h7c563okYLxkEIAABCHwnsLsdqnjrVQBAm4AJubvCowAAAABJRU5ErkJggg==);
+}
+
+#alarms
+{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    width: 50%;
+    height: 100%;
+    transform: translateX(50%);
+
+    gap: 20px;
+    flex: 1;
+    
+    transition: all ease-in-out 150ms;
+}
+#alarms.show
+{
+    transform: translateX(0);
+}
+
+#alarmForm
+{
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+#alarmEditor
+{
+    width: 50%;
+    height: 85%;
+    margin: 0 20px 0 0;
+    padding: 25px 0 25px 0;
+    border-radius: 20px;
+    opacity: 0;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    pointer-events: none;
+    transition: all ease-in-out 150ms;
+    
+    background-color: var(--tone4);
+    transform: translateX(-50%);
+}
+#alarmEditor.show
+{
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(0);
+}
+
+#editorContent
+{
+    height: calc(100% - 50px);
+    
+    font-weight: bold;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+#getTime
+{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+    width: 50%;
+}
+#getTime h1
+{
+    font-size: 55px;
+}
+
+.getTimeElement
+{
+    width: 100px;
+    height: 90px;
+    border-radius: 25px;
+    font-size: 55px;
+    flex-shrink: 0;
+    
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+    background-color: var(--tone2);
+    color: var(--text);
+}
+
+#getRepeat
+{
+    gap: 5px;
+    
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+}
+.repeatButtons
+{
+    width: 50px;
+    height: 50px;
+    font-size: 18px;
+
+    -webkit-appearance: none;
+    appearance: none;
+
+    background-color: var(--tone2);
+}
+.repeatButtons:checked
+{
+    background-color: var(--tone3);
+}
+.repeatButtons::before
+{
+    content: attr(name);
+    color: var(--text);
+    font-weight: bold;
+}
+
+#getName
+{
+    width: 350px;
+    height: 50px;
+    font-size: 23px;
+    border-radius: 15px;
+
+    background-color: var(--tone2);
+    color: var(--text);
+
+    text-align: center;
+    font-weight: bold;
+}
+#changeLabel:focus
+{
+    outline: none;
+    background-color: var(--tone3);
+}
+
+#saveAlarm
+{
+    width: 130px;
+    height: 60px;
+    border-radius: 20px;
+    font-size: 23px;
+
+    font-weight: bold;
+    text-align: center;
+
+    background-color: var(--tone2);
+    color: var(--text);
+    transition: all ease-in-out 150ms;
+}
+#saveAlarm:hover
+{
+    cursor: pointer;
+    background-color: var(--tone3);
+}
+
+.alarmObject
+{
+    font-size: 18px;
+    width: 550px;
+    border-radius: 20px;
+    background-color: var(--tone4);
+}
+.alarmName
+{
+    margin: 15px 0 15px 20px;
+}
+.alarmHour
+{
+    margin: 0 0 0 15px;
+    font-size: 40px;
+}
+.alarmRepeat
+{
+    margin: 15px 0 15px 20px;
+}
+.alarmInfo
+{
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.alarmData
+{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+.alarmCheckbox:checked + .slider::after
+{
+    transform: translateX(40px);
+}
+
+.alarmCheckbox:checked + .slider
+{
+    background-color: var(--tone3);
+}

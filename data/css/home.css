@@ -1,0 +1,73 @@
+@import url(index.css);
+
+#home
+{
+    border-top-right-radius: 20px;
+}
+
+#powerSection
+{
+    width: 50%;
+    height: 50%;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.homeButton
+{
+    width: 250px;
+    height: 100px;
+
+    background-color: var(--tone4);
+}
+
+#powerSection > p
+{
+    margin-top: 10px;
+    font-size: 18px;
+}   
+#powerSection img
+{
+    padding-right: 10px;
+    height: 32px;
+    flex-direction: row;
+    align-items: center;
+}
+
+label, .textLabels
+{
+    margin: 10px 0 10px 0;
+}
+
+#startContent
+{
+    text-align: center;
+}
+#startContent p
+{
+    font-weight: bold;
+}
+
+table, td, th
+{
+    background-color: var(--tone4);
+    text-align: center;
+    border: 2px solid black;
+}
+
+table {border-collapse: collapse;}
+
+#duration {padding: 0 15px 0 15px;}
+
+#powerSection th, td
+{
+    padding: 15px 20px 15px 20px;
+}
+
+#recentTable
+{
+    padding-left: 255px;
+}

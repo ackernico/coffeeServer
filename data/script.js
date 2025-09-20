@@ -11,146 +11,7 @@ const startData =
 
 let alarms = [];
 
-const sectionContent = 
-{
-    home: `
-    <div id="upText">
-        <h2>Homepage</h2>
-    </div>    
-    <div class="sectionContent">
-        <div id="powerSection">
-            <h2>Power</h2>
-            <button class="btn homeButton" onclick="toggleStart()"> 
-                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAQAAADZc7J/AAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAACYktHRAD/h4/MvwAAAAd0SU1FB+kHHRIlCvpI/V8AAAH7SURBVEjHnZWxSyNBGMXfjoukM+SCBItgkcpCYrOFxREOzuLqq/wbrIJYipVYWKW2POxsU5jjuPIQCVeKBIslWEhYUoaY8LsiyWYmye7mfNV837z35ptvdmalRJDjmpCQa3L6CLhlhtuPyEuMYoMRpSSeSXQoaSMebyjbgBJ7a1e3N6/In6by+qkhgTdaQ+7rh3w+e/15ytAE4NyiVbFRtWbOAWgy3z4nU9qA/SwD9hlMcyez1Db9mNjGTzPApx3n+mxPmljXVlzMgc5SG3Cmg3i8pbokNulZK42opVZQs74O6LEpjhziTWYPbpz8kVHNKnCsq8xTvNLYimpG1gGp7XWy9F5HbSusGlWs8I81jhxdlMCqGBWssGutFKoVBy0vXM1SIfkySce607vedafjZJKvSJ/iaMfZbU/fyUneYEFjsyKjFysMllo2WJK7rBejR3uKsjJA2TF4FIfOh9HINGg4/ENh6FqJIUGqPGBosbsYSVw4nmHyNigTOtyLSbpoXeeJRZCwuivvU5xNneJiSMOtgzINp3iAU0nyJAlfTX1dWHCsBz3oVdKOAgXWGz1BS9+sF5QCz/wPniksGLLL09ryJ3ZXNanI/Vry+7h5SxaGOlGqOKJO2gWUyHPJ20rxG5fkF/neShNfNX1RVRUVJEXq6K9+6feq/9Y/3oeew38Tm/MAAAAldEVYdGRhdGU6Y3JlYXRlADIwMjUtMDctMjlUMTg6Mzc6MTArMDA6MDB09MudAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDI1LTA3LTI5VDE4OjM3OjEwKzAwOjAwBalzIQAAACh0RVh0ZGF0ZTp0aW1lc3RhbXAAMjAyNS0wNy0yOVQxODozNzoxMCswMDowMFK8Uv4AAAAASUVORK5CYII=">
-                <p>ON</p>
-            </button>
-            <div id="startContent">
-                <p class="textLabels">Grind thickness</p>
-                <input class="thickness" type="range" min="0" max="22" step="1" name="thick">
-                <h2>Saved profile</h2>
-                <button class="btn homeButton" id="favoriteMethod"></button>
-            </div>
-        </div>
-        <div id="recentTable">
-            <table>
-                <tr>
-                    <th>Date</th>
-                    <th id="duration">Duration</th>
-                    <th>Method</th>
-                </tr>
-                <tr>
-                    <td>04. dez</td>
-                    <td>2:40</td>
-                    <td>Melitta</td>
-                 </tr>
-                 <tr>
-                    <td>02. jan</td>
-                    <td>1:50</td>
-                    <td>V60</td>
-                </tr>
-                <tr>
-                    <td>04. dez</td>
-                    <td>2:40</td>
-                    <td>Press</td>
-                 </tr>
-                 <tr>
-                    <td>02. jan</td>
-                    <td>1:50</td>
-                    <td>Espresso</td>
-                </tr>
-                <tr>
-                    <td>04. dez</td>
-                    <td>2:40</td>
-                    <td>Press</td>
-                 </tr>
-                 <tr>
-                    <td>02. jan</td>
-                    <td>1:50</td>
-                    <td>V60</td>
-                </tr>
-            </table>
-        </div>
-    </div>
-    `,
-    schedule: `
-        <div id="upText">
-            <h2>Schedule</h2>
-        </div>
-        <div class="sectionContent">
-            <div id="alarmContainer">
-                <button id="newAlarm" class="btn" onclick="alarmEditor()">Add new alarm</button>
-                <div id="alarmSection">
-                    <div id="alarms">
-                        <div class="alarmObject">
-                            <p class="alarmName">Placeholder</p>
-                            <div class="alarmData">
-                                <h2 class="alarmHour">06:30</h2>
-                                <div class="alarmToggle">
-                                    <label class="switch">
-                                        <input class="alarmCheckbox" type="checkbox" onchange="toggleAlarm(this)" hidden></input>
-                                        <span class="slider"></span>
-                                    </label>
-                                </div>
-                            </div>
-                            <p class="alarmRepeat">No repeat</p>
-                        </div>
-                        <div class="alarmObject">
-                            <p class="alarmName">Placeholder</p>
-                            <div class="alarmData">
-                                <h2 class="alarmHour">09:42</h2>
-                                <div class="alarmToggle">
-                                    <label class="switch">
-                                        <input class="alarmCheckbox" type="checkbox" onchange="toggleAlarm(this)" hidden></input>
-                                        <span class="slider"></span>
-                                    </label>
-                                </div>
-                            </div>
-                            <p class="alarmRepeat">No repeat</p>
-                        </div>
-                    </div>
-                    <div id="alarmEditor">
-                    <form id="alarmForm" autocomplete="off">
-                        <div id="upText">
-                            <input id="getName" type="text" placeholder="Alarm Label"></type>
-                        </div>
-                        <div id="editorContent">
-                            <div id="getTime">
-                                <span class="getTimeElement" onclick="adjustTime(this, 'h')"></span>
-                                <h1>:</h1>
-                                <span class="getTimeElement" onclick="adjustTime(this, 'm')"></span>
-                            </div>
-                            <label for="repeatButtons">Repeat</label>
-                            <div id="getRepeat">
-                                <input type="checkbox" name="S" class="btn repeatButtons" value="Su"></input> 
-                                <input type="checkbox" name="M" class="btn repeatButtons" value="Mo"></input>
-                                <input type="checkbox" name="T" class="btn repeatButtons" value="Tu"></input>
-                                <input type="checkbox" name="W" class="btn repeatButtons" value="We"></input>
-                                <input type="checkbox" name="T" class="btn repeatButtons" value="Th"></input>
-                                <input type="checkbox" name="F" class="btn repeatButtons" value="Fr"></input>
-                                <input type="checkbox" name="S" class="btn repeatButtons" value="Sa"></input>
-                            </div>
-                                <label for="thickness">Grind thickness</label>
-                                <input class="thickness" type="range" min="0" max="22" step="1" name="thick">
-                            </div>
-                            <div id="upText">
-                                <input id="saveAlarm" type="submit" value="Save"></input>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `,
-    profiles: `
-        <h1>Walt disney</h1>
-    `,
-    connection: `
-        <h1>Nike</h1>
-    `,
-    settings: `
-        <h1>Googoo</h1>
-    `,
-};
+const sectionContent = [];
 const methods = 
 {
     melitta: `
@@ -177,6 +38,29 @@ const methods =
 
 const method = 'v60';
 
+async function loadSectionPartials()
+{
+    const files = 
+    {
+        home: '../data/html/home.html',
+        schedule: '../data/html/schedule.html',
+        profiles: '../data/html/profiles.html',
+        connection: '../data/html/connection.html',
+        settings: '../data/html/settings.html'
+    };
+
+    const entries = await Promise.all(
+    Object.entries(files).map(async ([key, url]) => {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`Failed to load ${url}: ${res.status}`);
+      const html = await res.text();
+      return [key, html];
+    })
+  );
+
+  entries.forEach(([k, html]) => sectionContent[k] = html);
+}
+
 function adjustTime(timeElement, timeReset)
 {
     let time = Number(timeElement.innerText);
@@ -186,14 +70,14 @@ function adjustTime(timeElement, timeReset)
     else if(timeReset == 'm') reset = 59;
 
     time = time + 1;
-    if(time >= reset) time = 0;
+    if(time > reset) time = 0;
 
     timeElement.innerText = String(time).padStart(2, '0');
 }
 
 async function talk2ESP32(method, route, jsonData)
 {
-    const aux = "http://192.168.0.7";
+    const aux = "http://192.168.0.2";
     const address = aux + route;
 
     const labels = 
@@ -306,6 +190,15 @@ function alarmEditor()
 
 document.addEventListener('DOMContentLoaded', async () =>
 {
+    try
+    {
+        await loadSectionPartials();
+    }
+    catch(err)
+    {
+        console.log("Error while loading partials: ", err);
+    }
+    
     try
     {
         const data = await talk2ESP32("GET", "/alarms");

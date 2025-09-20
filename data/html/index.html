@@ -6,21 +6,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Access-Control-Allow-Origin" content="*"/>
 
-    <link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="stylesheet" type="text/css" href="../css/index.css">
+    <link rel="stylesheet" type="text/css" href="../css/display.css">
+    <link rel="stylesheet" type="text/css" href="../css/components.css">
+    <link rel="stylesheet" type="text/css" href="../css/home.css">
+    <link rel="stylesheet" type="text/css" href="../css/schedule.css">
+    <link rel="stylesheet" type="text/css" href="../css/info.css">
+    
     <link rel="icon"
         href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAATlBMVEVHcExeNx1dNx1dOiJeNhxdOB9fPileNx1iRTFdOB9eOyRiRzVeOiJdNx5eOyNePSZlT0JeOSBdOCBdNx1gQSxfPihdOB9eOiNlVkleNhxxXE9PAAAAGXRSTlMA2+eF+7k89xWgVQx0z2BIB5Gt8B8wwWkDcIQ5wAAAAUdJREFUOMvNUkeO5DAMVE5WDu7W/z86CpSBAbzXxehEsYqsIkiE/s+7/E0x0eJfeNWSUNY7sfEd573ftI8n6fcFj3pAKfXFMC8EIwdi9SJ0V0+ZUhcY5BPwu0Pvn5lTIXHn7iSmYigzbywQ7mvOJPeHi9Flues+sJ0jteUTJuqG63t9qMLbpTUYenGjWS8Bkf2LywSzhgCuxTKX0ZYrTZSVPfW65q2DQJDGUYB31RoXXEtUIKM+Y8YzizQVHwIEzLTiHgEeKUQYnaZaYfrph60chBnRR5WbfGLlD9UjAXORpsUps9f9UFGEshLo4Q7DMBubqxEFjCcgSNMes3Oj3+2imAx5Wo8Abnvh6xaIx2Kp6XYGIwGOQ9Ghgi3zhnWZwlMfnqP6CsqTsfXS2FpwynL7fZnroJWA05POX68XHj0nTOLsFfpD7we4gC1eYRB3TgAAAABJRU5ErkJggg==">
     <title>CoffeeServer Dashboard</title>
 </head>
 
 <body>
-    <script src="script.js" defer></script>
     <header class="mainTitle">
         <h1>Coffee Grinder Dashboard</h1>
     </header>
     <main>
         <aside>
             <ul>
-                <div id="side-container">
+                <div id="sideContainer">
                     <div id="home" class="sections">
                         <img class="sideIcons"
                             src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABpElEQVRYR+2Xu0oDQRSGHcEriI2oBGt738FWxEIQG0XQTgRJoYWghbFKk8pG0MJCsRAbwZewthW8QGxM46Vw/c6yCbjZ2Z2ZnQ0EHDhMMrvn/7+5ZqJ6HEoQBP2kHRArUfop9b5S6ttWTtkmROaX5M3Hcm/5vgDEl42mFUCKedPTGsIYwMDcCcIIwMLcGiITwMHcCiIVIIe5MYQWwIO5EUQigEfzTIg2gALMUyH+ABRoroVoAXTAPBEiBOigeRuEisyveDJnc4Z7ePcGjUUBOOLDjgdBF4lDAXglc8Il20POswC8IDTpQcxF4kkAKmTuumR7yAmnoA+hPWKZmCIGPAinSciF5ZE4Jyrxg6hG42bBADVuTVtNj64G+KAXn1FPBqmHDEfOywhsYHbCUP6IKeuol2qdODaAyA3QwHg0bgSETOc7MZIBkRugDsB4kgkQddrH/gG6egSq0G9n9CDvGqiyhsq6g2hNtlfBAKsAnOkAhnlwT0ynQOQZgQd0ZwCQQywsSbfiEu0yFbOaLXWBwJJmG17THv/XLK++EXdEmVz5+W+VXxs75evzgTCzAAAAAElFTkSuQmCC">
@@ -30,7 +35,7 @@
                     <div id="schedule" class="sections">
                         <img class="sideIcons"
                             src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAQAAADZc7J/AAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAACYktHRAD/h4/MvwAAAAd0SU1FB+kHHRIlCvpI/V8AAAHSSURBVEjHnZVBSxtRFIW/9zTRRKtSXKUyDCGIiyBSui2IlFL6O/oTXHXRhXRVuhCX4rJ07UosiAR3SpESXLroIgQRKamkQVrb00XGJDPzJpnMGRiG++4559775s0YHFCRF6yzSpk57rmlQZ1jjkyH0dCSttWSCy3tyBtOzuud2gOUI1VV1fFApKMtTSfRfZ1FPH0AlSLRc5Vd9KoasaKLQV1RXGk17t50dD0JIOtYuQpVoby+OseWLCCdD8xCW9LYAtL7B7qnTiaBjnywwCaFFC9IHAU2wahIk/mElJy5B1n+Jqz/pGR5mUgfjXleWTYy0wE2JllLldhtYiIWX7N4qQQ88uSZIEeOKZ7wJYj76EbJ6G/jm7CevCDjh+XfEN/F3v2tHodW+ixdDqngUL48HUiSTrQA6l6L2g8yGkYnPE858T/8BiyWqV7s1FJPvWU5ZpihMECHb5ZaagEXakazNHmUkf6LkjVtPmX2/2xuAfmJx3k47lQBC+Y725n8d8xl8KRp1cf2v+h+ch8kKroei36tlUg9ejqGxI2eOVrScspGLmLuPYmiPuhuxOQ/hnp3iJS1G/o/9tHWnirRfOMUWeA161RZYhZo06ROjQPTiuf+B4vOFrvhCO5sAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDI1LTA3LTI5VDE4OjM3OjEwKzAwOjAwdPTLnQAAACV0RVh0ZGF0ZTptb2RpZnkAMjAyNS0wNy0yOVQxODozNzoxMCswMDowMAWpcyEAAAAodEVYdGRhdGU6dGltZXN0YW1wADIwMjUtMDctMjlUMTg6Mzc6MTArMDA6MDBSvFL+AAAAAElFTkSuQmCC">
-                        <li class="sideText">Schedule</li>
+                        <li class="sideText">Alarms</li>
                     </div>
 
                     <div id="profiles" class="sections">
@@ -60,10 +65,9 @@
             </ul>
         </aside>
 
-        <div id="display-container">
-            
-        </div>
+        <div id="display-container"></div>
     </main>
+    <script src="../script.js"></script>
 </body>
 
 </html>

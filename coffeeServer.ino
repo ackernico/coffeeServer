@@ -36,7 +36,7 @@ void listDir(fs::FS &fs = LittleFS, const char * dirname = "/", uint8_t levels =
         if(file.isDirectory())
         {
             Serial.print("  DIR : ");
-            Serial.println(file.name());
+            Serial.printf("    %s\n", file.name());
             if(levels)
             {
                 listDir(fs, file.path(), levels -1);
@@ -134,16 +134,16 @@ void setup()
 
   // HTML files route
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send(LittleFS, "/index.html", String(), false);
+    request->send(LittleFS, "/html/index.html", String(), false);
   });
+  
+  // Partials files route
+  server.serveStatic("/html", LittleFS, "/html/");
+  server.serveStatic("/css", LittleFS, "/css/");
 
-  // CSS files route
-  server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send(LittleFS, "/style.css", "text/css");
-  });
   // JS file route
    server.on("/script.js", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send(LittleFS, "/script.js", "text/js");
+    request->send(LittleFS, "/script.js", "text/javascript");
   });
   // Font file route
   server.on("/Inter.ttf", HTTP_GET, [](AsyncWebServerRequest *request){

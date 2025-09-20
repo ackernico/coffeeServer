@@ -1,0 +1,67 @@
+<div class="upText">
+            <h2>Alarms</h2>
+        </div>
+        <div class="sectionContent">
+            <div id="alarmContainer">
+                <button id="newAlarm" class="btn" onclick="alarmEditor()">Add new alarm</button>
+                <div id="alarmSection">
+                    <div id="alarms">
+                        <div class="alarmObject">
+                            <p class="alarmName">Placeholder</p>
+                            <div class="alarmData">
+                                <h2 class="alarmHour">06:30</h2>
+                                <div class="alarmToggle">
+                                    <label class="switch">
+                                        <input class="alarmCheckbox" type="checkbox" onchange="toggleAlarm(this)" hidden></input>
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                            <p class="alarmRepeat">No repeat</p>
+                        </div>
+                        <div class="alarmObject">
+                            <p class="alarmName">Placeholder</p>
+                            <div class="alarmData">
+                                <h2 class="alarmHour">09:42</h2>
+                                <div class="alarmToggle">
+                                    <label class="switch">
+                                        <input class="alarmCheckbox" type="checkbox" onchange="toggleAlarm(this)" hidden></input>
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                            <p class="alarmRepeat">No repeat</p>
+                        </div>
+                    </div>
+                    <div id="alarmEditor">
+                    <form id="alarmForm" autocomplete="off">
+                        <div class="upText">
+                            <input id="getName" type="text" placeholder="Alarm Label"></type>
+                        </div>
+                        <div id="editorContent">
+                            <div id="getTime">
+                                <span class="getTimeElement" onclick="adjustTime(this, 'h')"></span>
+                                <h1>:</h1>
+                                <span class="getTimeElement" onclick="adjustTime(this, 'm')"></span>
+                            </div>
+                            <label for="repeatButtons">Repeat</label>
+                            <div id="getRepeat">
+                                <input type="checkbox" name="S" class="btn repeatButtons" value="Su"></input> 
+                                <input type="checkbox" name="M" class="btn repeatButtons" value="Mo"></input>
+                                <input type="checkbox" name="T" class="btn repeatButtons" value="Tu"></input>
+                                <input type="checkbox" name="W" class="btn repeatButtons" value="We"></input>
+                                <input type="checkbox" name="T" class="btn repeatButtons" value="Th"></input>
+                                <input type="checkbox" name="F" class="btn repeatButtons" value="Fr"></input>
+                                <input type="checkbox" name="S" class="btn repeatButtons" value="Sa"></input>
+                            </div>
+                                <label for="thickness">Grind thickness</label>
+                                <input class="thickness" type="range" min="0" max="22" step="1" name="thick">
+                            </div>
+                            <div class="upText">
+                                <input id="saveAlarm" type="submit" value="Save"></input>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>

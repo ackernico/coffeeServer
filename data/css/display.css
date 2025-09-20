@@ -1,0 +1,98 @@
+@import url(index.css);
+
+main
+{
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 30px;
+}
+
+main #sideContainer
+{
+    justify-content: flex-start;
+}
+
+.mainTitle
+{
+    padding-top: 35px;
+    padding-bottom: 35px;
+    font-size: large;
+    
+    background-color: var(--tone2);
+    color: var(--text);
+
+    font-family: monospace;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+#sideContainer
+{
+    font-size: 22px;
+    width: 230px;
+
+    list-style-type: none;
+    justify-content: left;
+    align-items: start;
+    text-align: start;
+    display: inline-block;
+}
+
+#display-container
+{
+    padding: 15px 0 0 0;
+    border-radius: 20px;
+    width: 1260px;
+    height: 680px;
+    transform: translateY(100px);
+    
+    opacity: 0;
+    color : var(--text);
+    background-color: var(--tone2);
+    transition: all ease-in-out 150ms;
+    flex-direction: row;
+}
+#display-container.show
+{
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.sectionContent
+{
+    height: 95%;
+    
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}
+
+.sections
+{
+    padding-bottom: 30px;
+    padding-top: 30px;
+
+    background-color: var(--tone2);
+    color: var(--text);
+    
+    font-weight: bold;
+    display: flex;
+    justify-content: start;
+    align-items: center;
+    transition: all ease-in-out .2s;
+}
+.sections:hover
+{   
+    background-color: var(--tone3);
+    cursor: pointer;
+}
+
+.active
+{
+    background-color: var(--tone4);
+    color: var(--text);
+}
