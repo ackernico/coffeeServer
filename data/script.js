@@ -42,37 +42,54 @@ async function loadSectionPartials()
 {
     const files = 
     {
-        home: '../data/html/home.html',
-        schedule: '../data/html/schedule.html',
-        profiles: '../data/html/profiles.html',
-        connection: '../data/html/connection.html',
-        settings: '../data/html/settings.html'
+        home: '/html/home.html',
+        schedule: '/html/schedule.html',
+        profiles: '/html/profiles.html',
+        connection: '/html/connection.html',
+        settings: '/html/settings.html'
     };
 
     const entries = await Promise.all(
-    Object.entries(files).map(async ([key, url]) => {
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`Failed to load ${url}: ${res.status}`);
-      const html = await res.text();
-      return [key, html];
-    })
-  );
+      Object.entries(files).map(async ([key, url]) => {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`Failed to load ${url}: ${res.status}`);
+        const html = await res.text();
+        return [key, html];
+      })
+    );
 
-  entries.forEach(([k, html]) => sectionContent[k] = html);
+    entries.forEach(([k, html]) => sectionContent[k] = html);
 }
 
-function adjustTime(timeElement, timeReset)
+function adjustTime(arrow, timeReset, order)
 {
+    let timeElement = arrow.closest(".getTimeContainer").children[1];
     let time = Number(timeElement.innerText);
     let reset;
     
     if(timeReset == 'h') reset = 23;
     else if(timeReset == 'm') reset = 59;
 
-    time = time + 1;
+    if(order == 's') time = time + 1;
+    else if(order == 'm') time = time - 1;
     if(time > reset) time = 0;
+    if(time < 0) time = reset;
 
     timeElement.innerText = String(time).padStart(2, '0');
+}
+
+function showArrows(button, state)
+{
+    const timeContainer = button.closest('.getTimeContainer').children;
+
+    Array.from(timeContainer).forEach(element =>
+    {
+        if(element.tagName == "LABEL")
+        {
+            if(state) element.classList.add('show');
+            else if(!state) element.classList.remove('show');
+        }
+    });
 }
 
 async function talk2ESP32(method, route, jsonData)
@@ -121,7 +138,7 @@ function loadContent(content)
             document.getElementById('favoriteMethod').innerHTML = methods[method];
             break;
         case 'schedule':
-            document.getElementById('getTime').querySelectorAll('.getTimeElement').forEach((element) =>
+            document.getElementById('getTime').querySelectorAll('.getTimeButton').forEach((element) =>
             {
                 element.innerText = "00";
             });

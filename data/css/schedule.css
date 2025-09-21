@@ -120,7 +120,15 @@
     font-size: 55px;
 }
 
-.getTimeElement
+.getTimeContainer
+{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.getTimeButton
 {
     width: 100px;
     height: 90px;
@@ -129,11 +137,44 @@
     flex-shrink: 0;
     
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     
     background-color: var(--tone2);
     color: var(--text);
+    transition: all ease-in-out 150ms;
+}
+.getTimeButton:hover
+{
+    background-color: var(--tone3);
+}
+
+.timeArrow
+{
+    width: 32px;
+    height: 32px;
+    content: url(../assets/arrow.ico);
+    opacity: 0;
+    pointer-events: none;
+    user-select: none;
+
+    transform: translateY(150%);
+    transition: all ease-in-out 150ms;
+}
+.timeArrow:hover
+{
+    cursor: pointer;
+}
+.timeArrow.show
+{
+    pointer-events: initial;
+    transform: translateY(0);
+    opacity: 1;
+}
+.down
+{
+    rotate: 180deg;
 }
 
 #getRepeat

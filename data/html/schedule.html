@@ -40,9 +40,17 @@
                         </div>
                         <div id="editorContent">
                             <div id="getTime">
-                                <span class="getTimeElement" onclick="adjustTime(this, 'h')"></span>
+                                <div class="getTimeContainer">
+                                    <label class="timeArrow" onclick="adjustTime(this, 'h', 's')"></label>
+                                    <span class="getTimeButton" onmouseenter="showArrows(this, true)"></span>
+                                    <label class="down timeArrow" onclick="adjustTime(this, 'h', 'm')"></label>
+                                </div>
                                 <h1>:</h1>
-                                <span class="getTimeElement" onclick="adjustTime(this, 'm')"></span>
+                                <div id = "bunda" class="getTimeContainer">
+                                    <label class="timeArrow" onclick="adjustTime(this, 'm', 's')"></label>
+                                    <span class="getTimeButton" onmouseover="showArrows(this, true)"></span>
+                                    <label class="down timeArrow" onclick="adjustTime(this, 'm', 'm')"></label>
+                                </div>
                             </div>
                             <label for="repeatButtons">Repeat</label>
                             <div id="getRepeat">

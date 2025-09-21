@@ -1,3 +1,4 @@
 {
-    "liveServer.settings.multiRootWorkspaceName": "coffeeServer"
+    "liveServer.settings.multiRootWorkspaceName": "coffeeServer",
+    "liveServer.settings.root": "data"
 }
