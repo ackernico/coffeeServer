@@ -155,22 +155,13 @@
     width: 32px;
     height: 32px;
     content: url(../assets/arrow.ico);
-    opacity: 0;
-    pointer-events: none;
     user-select: none;
 
-    transform: translateY(150%);
     transition: all ease-in-out 150ms;
 }
 .timeArrow:hover
 {
     cursor: pointer;
-}
-.timeArrow.show
-{
-    pointer-events: initial;
-    transform: translateY(0);
-    opacity: 1;
 }
 .down
 {

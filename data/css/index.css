@@ -7,6 +7,14 @@
     font-family: test;
 }
 
+@font-face 
+{
+    font-family: "test";
+    src: url("../Inter.woff2") format("truetype");
+    font-style: normal;
+    font-display: swap;
+}
+
 :root
 {
     --tone1: #ECDFCC;
@@ -16,13 +24,9 @@
     --text: #f0ebe8;
 }
 
-@font-face {
-    font-family: test;
-    src: url(../Inter.ttf);
-}
-
 body
 {
+    font-family: "test";
     background-color: var(--tone1);
     display : flex;
     flex-direction: column;

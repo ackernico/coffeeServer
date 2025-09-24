@@ -3,6 +3,7 @@ const getActive = document.getElementById('active');
 const display = document.getElementById('display-container');
 const homeButtons = document.querySelectorAll('.homeButton');
 const initalContent = document.getElementById('startContent');
+const template = document.getElementById('alarmObjectTemp');
 const startData = 
 {
     "status" : null,
@@ -35,6 +36,22 @@ const methods =
     <p>Moka pot</p>
     `,
 };
+
+const blankAlarm = `
+    <div class="alarmObject">
+        <p class="alarmName"></p>
+        <div class="alarmData">
+            <h2 class="alarmHour"></h2>
+            <div class="alarmToggle">
+                <label class="switch">
+                    <input class="alarmCheckbox" type="checkbox" onchange="toggleAlarm(this)" hidden>
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+        <p class="alarmRepeat"></p>
+    </div>
+`;
 
 const method = 'v60';
 
@@ -78,23 +95,9 @@ function adjustTime(arrow, timeReset, order)
     timeElement.innerText = String(time).padStart(2, '0');
 }
 
-function showArrows(button, state)
-{
-    const timeContainer = button.closest('.getTimeContainer').children;
-
-    Array.from(timeContainer).forEach(element =>
-    {
-        if(element.tagName == "LABEL")
-        {
-            if(state) element.classList.add('show');
-            else if(!state) element.classList.remove('show');
-        }
-    });
-}
-
 async function talk2ESP32(method, route, jsonData)
 {
-    const aux = "http://192.168.0.2";
+    const aux = "http://192.168.0.5";
     const address = aux + route;
 
     const labels = 
@@ -138,24 +141,22 @@ function loadContent(content)
             document.getElementById('favoriteMethod').innerHTML = methods[method];
             break;
         case 'schedule':
+            const checkbox = document.querySelectorAll('.alarmObject .alarmCheckbox');    
+
             document.getElementById('getTime').querySelectorAll('.getTimeButton').forEach((element) =>
             {
                 element.innerText = "00";
             });
 
-            alarms.length = Array.from(document.querySelectorAll('#alarms .alarmObject')).length;
-            const cb = document.querySelectorAll('.alarmObject .alarmCheckbox');
-
-            document.querySelectorAll('.alarmObject').forEach((alarmE, i) =>
+            for(let i=0 ; i<=alarms.length ; i++)
             {
-                if(alarms.length > 0 && alarms[i] != undefined)
+                if(alarms[i] != undefined)
                 {
-                    if(alarms[i].status == true)
-                    {
-                        cb[i].checked = true;
-                    }
+                    createAlarmObject(i, alarms[i].name, alarms[i].timeH, alarms[i].timeM, alarms[i].repeatS);
                 }
-            });
+            }
+
+            console.log(alarms);
             break;
         default:
             break;
@@ -173,36 +174,131 @@ function toggleStart()
     talk2ESP32("POST", "/on", startData);
 }
 
-function toggleAlarm(checkbox)
+function toggleAlarm(element)
 {
-    const alarm = checkbox.closest('.alarmObject');
+    const alarm = element.closest('.alarmObject');
 
     const alarmList = Array.from(document.querySelectorAll('#alarms .alarmObject'));
 
     const index = alarmList.indexOf(alarm);
-    const hour = alarm.querySelector('.alarmHour').innerText;
+    const hour = alarm.querySelector('.alarmHour').innerText.substring(0, 2);
+    const minute = alarm.querySelector('.alarmHour').innerText.substring(3, 5);
     const alarmName = alarm.querySelector('.alarmName').innerText;
+    const repeat = alarm.querySelector('.alarmRepeat').innerText;
+
+    let repeats = []
+
+    if(repeat == "Every weekday")
+    {
+        for(let i=1 ; i<=5 ; i++)
+        {
+            repeats[i] = true;
+        }
+        repeats[0] = false;
+        repeats[6] = false;
+    } 
+    else if(repeat == "No repeat")
+    {
+        for(let i=0 ; i<=6 ; i++)
+        {
+            repeats[i] = false;
+        }
+    }
 
     alarms[index] = 
     {
         index : index,
-        status : checkbox.checked,
-        time : hour,
+        status : element.checked,
+        timeH : hour,
+        timeM : minute,
+        repeat: repeats,
+        repeatS: repeat,
         name : alarmName
     };
-    console.log(alarms);
     talk2ESP32("POST", "/alarms", alarms[index]);
 }
 
-function alarmEditor()
+function toggleAlarmView(mode)
 {
     let editor = document.getElementById('alarmEditor');
     let alarmsEl = document.getElementById('alarms');
 
-    console.log(document.getElementById('alarms').children);
+    if(mode == 's')
+    {
+        editor.classList.add('show');
+        alarmsEl.classList.add('show');
+    }
+    else if(mode == 'r')
+    {
+        editor.classList.remove('show');
+        alarmsEl.classList.remove('show');
+    }
 
-    editor.classList.add('show');
-    alarmsEl.classList.add('show');
+}
+
+function createAlarmObject(idx, name, timeH, timeM, aString)
+{
+    document.getElementById('alarms').insertAdjacentHTML('beforeend', blankAlarm);
+
+    const newAlarmObject = document.querySelectorAll('.alarmObject')[idx]
+    newAlarmObject.children[0].innerText = name;
+    newAlarmObject.children[1].children[0].innerText = timeH + ":" + timeM;
+    newAlarmObject.children[1].children[1].querySelector('.alarmCheckbox').checked = true;
+    newAlarmObject.children[2].innerText = aString;
+    toggleAlarm(document.querySelectorAll('.alarmObject .alarmCheckbox')[idx]);
+}
+
+function saveAlarm()
+{
+    const alarmName = document.getElementById('getName').value || "New Alarm";
+    const alarmTime = [];
+    const index = Array.from(document.querySelectorAll("#alarms .alarmObject")).length;
+    const repeatInputs = document.getElementById('getRepeat');
+    let alarmString = "Once";
+    let aux = 0;
+    let repeats = [];
+
+    document.querySelectorAll('.getTimeContainer').forEach((element, i) =>
+    {
+        alarmTime[i] = element.children[1].innerText;
+    });
+
+    Array.from(repeatInputs.children).forEach((element, i) =>
+    {
+        if(element.checked)
+        {
+            repeats[i] = true;
+            if(aux === 0)
+            {
+                alarmString = "Every ";
+                alarmString = alarmString + element.value;
+            }
+            else alarmString = alarmString + ", " + element.value;
+            aux++;
+        } 
+        else repeats[i] = false;
+        if(aux === 6) alarmString = "Every day";
+    });
+
+    if(alarmString === "Every Monday, Tuesday, Wednesday, Thursday, Friday") alarmString = "Every weekday";
+    else if(alarmString === "Every Sunday, Saturday") alarmString = "Every weekend";
+
+    alarms[index] = 
+    {
+        index : index,
+        status : true,
+        timeH : alarmTime[0],
+        timeM : alarmTime[1],
+        repeat: repeats,
+        repeatS: alarmString,
+        name : alarmName
+    };
+
+    document.getElementById('getName').value = "";
+    createAlarmObject(index, alarmName, alarmTime[0], alarmTime[1], alarmString);
+    
+    toggleAlarmView('r');
+    console.log(alarms);
 }
 
 document.addEventListener('DOMContentLoaded', async () =>
@@ -226,8 +322,6 @@ document.addEventListener('DOMContentLoaded', async () =>
         console.log("Failed to load alarms", err);
     }
 
-    console.log(alarms);
-    
     document.getElementById('home').classList.add('active');
     display.innerHTML = sectionContent['home'];
     display.classList.add('show');

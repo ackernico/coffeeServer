@@ -2,6 +2,8 @@
 #include <ESPAsyncWebServer.h>
 #include <ArduinoJson.h>
 #include <LittleFS.h>
+#include <string>
+#include <iostream>
 
 /*Network credentials*/
 const char* ssid = "Nicolas_2.4G";
@@ -140,14 +142,15 @@ void setup()
   // Partials files route
   server.serveStatic("/html", LittleFS, "/html/");
   server.serveStatic("/css", LittleFS, "/css/");
+  server.serveStatic("/assets", LittleFS, "/assets/");
 
   // JS file route
    server.on("/script.js", HTTP_GET, [](AsyncWebServerRequest *request){
     request->send(LittleFS, "/script.js", "text/javascript");
   });
   // Font file route
-  server.on("/Inter.ttf", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send(LittleFS, "/Inter.ttf", "text/ttf");
+  server.on("/Inter.woff2", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send(LittleFS, "/Inter.woff2", "font/woff2");
   });
   
   server.on("/on", HTTP_POST, [](AsyncWebServerRequest *request){},
@@ -210,8 +213,18 @@ void setup()
 
       int idx = incoming["index"] | -1;
       bool status = incoming["status"] | false;
-      const char* time = incoming["time"] | "";
+      const char* timeH = incoming["timeH"] | "";
+      const char* timeM = incoming["timeM"] | "";
       const char* name = incoming["name"] | "";
+      bool repeat[7] = {false, false, false, false, false, false, false};
+      if (incoming.containsKey("repeat") && incoming["repeat"].is<JsonArray>()) {
+          JsonArray repeatArr = incoming["repeat"].as<JsonArray>();
+          for (size_t i = 0; i < 7 && i < repeatArr.size(); ++i) {
+              repeat[i] = repeatArr[i].as<bool>();
+          }
+          // Now repeat[] contains your 7 booleans
+      }
+      const char* repeatS = incoming["repeatS"] | "";
       
       DynamicJsonDocument doc(4096);
       DeserializationError err2 = deserializeJson(doc, storeAlarm);
@@ -230,8 +243,11 @@ void setup()
       slot["received"] = true;
       slot["index"] = idx;
       slot["status"] = status;
-      slot["time"] = time;
+      slot["timeH"] = timeH;
+      slot["timeM"] = timeM;
       slot["name"] = name;
+      slot["repeat"] = repeat;
+      slot["repeatS"] = repeatS;
 
       String out;
       serializeJson(arr, out);
