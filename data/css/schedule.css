@@ -48,9 +48,9 @@
     justify-content: center;
     align-items: center;
 
-    width: 50%;
+    width: 550px;   
     height: 100%;
-    transform: translateX(50%);
+    transform: translate(50%);
 
     gap: 20px;
     flex: 1;
@@ -60,6 +60,7 @@
 #alarms.show
 {
     transform: translateX(0);
+    margin: 0 0 0 15px; 
 }
 
 #alarmForm
@@ -71,9 +72,9 @@
 
 #alarmEditor
 {
-    width: 50%;
+    width: calc(90% - 550px);  
     height: 85%;
-    margin: 0 20px 0 0;
+    margin: 0 20px 0 20px;
     padding: 25px 0 25px 0;
     border-radius: 20px;
     opacity: 0;
@@ -84,20 +85,22 @@
     align-items: center;
     pointer-events: none;
     transition: all ease-in-out 150ms;
-    
-    background-color: var(--tone4);
+
     transform: translateX(-50%);
+    background-color: var(--tone4);
 }
 #alarmEditor.show
 {
     opacity: 1;
     pointer-events: auto;
     transform: translateX(0);
+
 }
 
 #editorContent
 {
     height: calc(100% - 50px);
+    width: 100%;
     
     font-weight: bold;
     display: flex;
@@ -241,7 +244,7 @@
 .alarmObject
 {
     font-size: 18px;
-    width: 550px;
+    width: 100%;
     border-radius: 20px;
     background-color: var(--tone4);
 }

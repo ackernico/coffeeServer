@@ -71,3 +71,10 @@ table {border-collapse: collapse;}
 {
     padding-left: 255px;
 }
+
+.sideIcons
+{
+    margin: 0 10px 0 10px;
+    width: 32px;
+    height: 32px;
+}
