@@ -2,6 +2,7 @@
 #include <ESPAsyncWebServer.h>
 #include <ArduinoJson.h>
 #include <LittleFS.h>
+#include <ESP32Servo.h>
 #include <string>
 #include <iostream>
 
@@ -9,12 +10,22 @@
 const char* ssid = "Nicolas_2.4G";
 const char* pass = "nicolas2006";
 
-/*Pins declaration*/
-const int clockWisePin = 33;
-
 /*Auxiliar variables*/
 String grinderState;
 String storeAlarm = "[]";
+Servo servo;
+bool powerButton;
+float currentValue;
+int adcValue;
+int offset;
+
+/*Pins declaration*/
+const int clockWiseButton = 15;
+const int counterClockWiseButton = 2;
+const int clockWisePin = 13;
+const int counterClockWisePin = 12;
+const int servoPin = 18;
+const int measurePin = 35;
 
 AsyncWebServer server(80);
 
@@ -109,11 +120,48 @@ void readJson(const char* path, fs::FS &fs = LittleFS)
   alarmJSON.close();
 }
 
+void turnON(int thickness = 11)
+{
+  int delay = millis();
+  servo.write(25);
+  digitalWrite(clockWisePin, HIGH);
+}
+
+int currentMeasure()
+{
+  long allCurrents = 0;
+  float aux;
+  for(int i = 0; i < 1500; i++)
+  {
+    allCurrents += analogRead(measurePin);
+  }
+  allCurrents = allCurrents / 1500;
+
+  aux = ((allCurrents - offset) * 3.3) / (4095 * 0.1);
+  return aux;
+}
+
+int calibrateOffset()
+{
+  long sum = 0;
+  for(int i=0 ; i<2000 ; i++)
+  {
+    sum += analogRead(measurePin);
+  }
+}
 void setup() 
 {
   Serial.begin(115200);
 
+  ESP32PWM::allocateTimer(0);
+  servo.setPeriodHertz(50);
+  servo.attach(servoPin, 1000, 2000);
+  servo.write(45);
+
+  pinMode(clockWiseButton, INPUT);
+  pinMode(counterClockWiseButton, INPUT);
   pinMode(clockWisePin, OUTPUT);
+  pinMode(counterClockWisePin, OUTPUT);
 
   if(!LittleFS.begin(true))
   {
@@ -268,5 +316,11 @@ void setup()
 
 void loop() 
 {
-  // put your main code here, to run repeatedly:
+  powerButton = digitalRead(clockWiseButton);
+
+  currentValue = currentMeasure();
+
+  if(powerButton) turnON();
+  Serial.printf("Current value: %.2f A\n", currentValue);
+
 }
