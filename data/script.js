@@ -62,7 +62,6 @@ async function loadSectionPartials()
         home: '/html/home.html',
         schedule: '/html/schedule.html',
         profiles: '/html/profiles.html',
-        connection: '/html/connection.html',
         settings: '/html/settings.html'
     };
 
@@ -97,7 +96,7 @@ function adjustTime(arrow, timeReset, order)
 
 async function talk2ESP32(method, route, jsonData)
 {
-    const aux = "http://192.168.0.5";
+    const aux = "http://192.168.0.2";
     const address = aux + route;
 
     const labels = 
