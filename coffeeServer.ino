@@ -15,8 +15,6 @@ String grinderState;
 String storeAlarm = "[]";
 Servo servo;
 bool powerButton;
-float currentValue;
-int adcValue;
 int offset;
 
 /*Pins declaration*/
@@ -122,33 +120,35 @@ void readJson(const char* path, fs::FS &fs = LittleFS)
 
 void turnON(int thickness = 11)
 {
-  int delay = millis();
   servo.write(25);
   digitalWrite(clockWisePin, HIGH);
 }
 
-int currentMeasure()
-{
-  long allCurrents = 0;
-  float aux;
-  for(int i = 0; i < 1500; i++)
-  {
-    allCurrents += analogRead(measurePin);
-  }
-  allCurrents = allCurrents / 1500;
-
-  aux = ((allCurrents - offset) * 3.3) / (4095 * 0.1);
-  return aux;
-}
-
-int calibrateOffset()
+int analogFilter(int pin, int samples, bool calibrate = false)
 {
   long sum = 0;
-  for(int i=0 ; i<2000 ; i++)
+  int aux;
+  float finalMeasure;
+
+  for(int i=0 ; i<=samples ; i++)
   {
-    sum += analogRead(measurePin);
+    sum += analogRead(pin);
+  }
+
+  aux = sum/samples;
+  if(calibrate)
+  {
+    Serial.printf("Offset calibrated to %i\r\n", aux);
+    return aux;
+  } 
+  else if(!calibrate)
+  {
+    finalMeasure = ((((float)aux - offset) * 3.3)/(float)4095) * 10;
+    Serial.printf("Current: %.2f A\r\n", finalMeasure);
+    return finalMeasure;
   }
 }
+
 void setup() 
 {
   Serial.begin(115200);
@@ -177,6 +177,7 @@ void setup()
   }
   Serial.println("Connected!");
   Serial.println(WiFi.localIP());
+  offset = analogFilter(measurePin, 1200, true);
 
   listDir();
 
@@ -318,9 +319,5 @@ void loop()
 {
   powerButton = digitalRead(clockWiseButton);
 
-  currentValue = currentMeasure();
-
   if(powerButton) turnON();
-  Serial.printf("Current value: %.2f A\n", currentValue);
-
 }
