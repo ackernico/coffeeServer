@@ -16,6 +16,7 @@ String storeAlarm = "[]";
 Servo servo;
 bool powerButton;
 int offset;
+bool webPower = false;
 
 /*Pins declaration*/
 const int clockWiseButton = 15;
@@ -118,10 +119,20 @@ void readJson(const char* path, fs::FS &fs = LittleFS)
   alarmJSON.close();
 }
 
-void turnON(int thickness = 11)
+void turnON(bool webButton, int thickness = 11)
 {
-  servo.write(25);
-  digitalWrite(clockWisePin, HIGH);
+  if(!webButton) turnOFF();
+  else
+  {
+    servo.write(25);
+    digitalWrite(clockWisePin, HIGH);
+  }
+}
+
+void turnOFF()
+{
+  digitalWrite(clockWisePin, LOW);
+  servo.write(45);
 }
 
 int analogFilter(int pin, int samples, bool calibrate = false)
@@ -205,7 +216,6 @@ void setup()
   server.on("/on", HTTP_POST, [](AsyncWebServerRequest *request){},
   NULL, [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) 
     {
-      Serial.println("Ring Ring Ring! POST method is calling!");
       String body;
       for(size_t i=0 ; i<len ; i++)
       {
@@ -224,8 +234,10 @@ void setup()
       const char* status = doc["status"];
       const char* thickness = doc["thickness"];
 
-      Serial.printf("Status: %s\n", status);
-      Serial.printf("Thickness: %s\n", thickness);
+      std::string sStatus = status;
+
+      if(sStatus == "on") webPower = true;
+      else if(sStatus == "off") webPower = false;
 
       String response;
       StaticJsonDocument<200> respDoc;
@@ -271,7 +283,6 @@ void setup()
           for (size_t i = 0; i < 7 && i < repeatArr.size(); ++i) {
               repeat[i] = repeatArr[i].as<bool>();
           }
-          // Now repeat[] contains your 7 booleans
       }
       const char* repeatS = incoming["repeatS"] | "";
       
@@ -318,6 +329,5 @@ void setup()
 void loop() 
 {
   powerButton = digitalRead(clockWiseButton);
-
-  if(powerButton) turnON();
+  turnON(webPower || powerButton);
 }

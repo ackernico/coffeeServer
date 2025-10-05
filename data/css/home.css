@@ -8,7 +8,7 @@
 #powerSection
 {
     width: 50%;
-    height: 50%;
+    height: 70%;
 
     display: flex;
     flex-direction: column;
@@ -22,6 +22,12 @@
     height: 100px;
 
     background-color: var(--tone4);
+}
+
+#powerButton
+{
+    text-align: center;
+    transition: all ease-in-out 150ms;
 }
 
 #powerSection > p
@@ -45,10 +51,72 @@ label, .textLabels
 #startContent
 {
     text-align: center;
+    position: absolute;
+    pointer-events: none;
+    transform: translateY(-70%);
+    opacity: 0;
+
+    transition: all ease 150ms;
 }
 #startContent p
 {
     font-weight: bold;
+}
+#startContent.show
+{
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: initial;
+    position: relative;
+}
+
+#grindMeasurements
+{
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    pointer-events: none;
+
+    gap: 20px;
+    height: 40%;
+    width: 10%;
+    font-size: 30px;
+    border-radius: 20px;
+    margin-top: 10px;
+    opacity: 0;
+
+    background-color: var(--tone4);
+    transform: translateY(-30%);
+    transition: all ease-in-out 150ms;
+}
+#grindMeasurements.show
+{
+    opacity: 1;
+    width: 60%;
+    transform: translateY(0);
+    pointer-events: initial;
+    position: relative;
+}
+
+.measurement
+{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding-left: 30%;
+}
+
+#measurementLabel
+{
+    font-size: 30px;
+    opacity: 0;
+    pointer-events: none;
+}
+#measurementLabel.show
+{
+    opacity: 1;
+    pointer-events: initial;
 }
 
 table, td, th
@@ -74,7 +142,7 @@ table {border-collapse: collapse;}
 
 .sideIcons
 {
-    margin: 0 10px 0 10px;
+    margin: 0 10px 0 0;
     width: 32px;
     height: 32px;
 }

@@ -4,13 +4,8 @@ const display = document.getElementById('display-container');
 const homeButtons = document.querySelectorAll('.homeButton');
 const initalContent = document.getElementById('startContent');
 const template = document.getElementById('alarmObjectTemp');
-const startData = 
-{
-    "status" : null,
-    "thickness" : null
-};
-
 let alarms = [];
+let grindState = false;
 
 const sectionContent = [];
 const methods = 
@@ -137,7 +132,22 @@ function loadContent(content)
     switch(content)
     {
         case 'home':
+            display.innerHTML = sectionContent['home'];
             document.getElementById('favoriteMethod').innerHTML = methods[method];
+            if(grindState)
+            {
+                document.getElementById('startContent').classList.remove('show');
+                document.getElementById('grindMeasurements').classList.add('show');
+                document.getElementById('measurementLabel').classList.add('show');
+                document.getElementById('buttonLabel').innerText = "OFF";
+            }
+            else
+            {
+                document.getElementById('startContent').classList.add('show');
+                document.getElementById('grindMeasurements').classList.remove('show');
+                document.getElementById('measurementLabel').classList.remove('show');
+                document.getElementById('buttonLabel').innerText = "ON";
+            }
             break;
         case 'schedule':
             const checkbox = document.querySelectorAll('.alarmObject .alarmCheckbox');   
@@ -154,7 +164,6 @@ function loadContent(content)
                     createAlarmObject(i, alarms[i].name, alarms[i].timeH, alarms[i].timeM, alarms[i].repeatS);
                 }
             }
-
             console.log(alarms);
             break;
         default:
@@ -162,14 +171,34 @@ function loadContent(content)
     }
 }
 
-function toggleStart()
+function toggleStart() 
 {
-    const thicknessSelect = document.getElementById("startContent").querySelector('.thickness');
-    startData.status = "on";
-    startData.thickness = thicknessSelect.value;
+    let startData =
+    {
+        "status" : null,
+        "thickness" : null
+    };
 
-    console.log(startData);
+    grindState = !grindState;
 
+    if(grindState)
+    {
+        startData.status = "on";
+        document.getElementById('startContent').classList.remove('show');
+        document.getElementById('grindMeasurements').classList.add('show');
+        document.getElementById('measurementLabel').classList.add('show');
+        document.getElementById('buttonLabel').innerText = "OFF";
+    }
+    else
+    {
+        startData.status = "off";
+        document.getElementById('startContent').classList.add('show');
+        document.getElementById('grindMeasurements').classList.remove('show');
+        document.getElementById('measurementLabel').classList.remove('show');
+        document.getElementById('buttonLabel').innerText = "ON";
+    }
+
+    startData.thickness = document.querySelector('#startContent .thickness').value;
     talk2ESP32("POST", "/on", startData);
 }
 
