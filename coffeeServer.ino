@@ -17,6 +17,7 @@ Servo servo;
 bool powerButton;
 int offset;
 bool webPower = false;
+long sendPower;
 
 /*Pins declaration*/
 const int clockWiseButton = 15;
@@ -27,6 +28,7 @@ const int servoPin = 18;
 const int measurePin = 35;
 
 AsyncWebServer server(80);
+AsyncWebSocket ws("/ws");
 
 void listDir(fs::FS &fs = LittleFS, const char * dirname = "/", uint8_t levels = 1)
 {
@@ -135,7 +137,7 @@ void turnOFF()
   servo.write(45);
 }
 
-int analogFilter(int pin, int samples, bool calibrate = false)
+float analogFilter(int pin, int samples, bool calibrate = false)
 {
   long sum = 0;
   int aux;
@@ -155,10 +157,18 @@ int analogFilter(int pin, int samples, bool calibrate = false)
   else if(!calibrate)
   {
     finalMeasure = ((((float)aux - offset) * 3.3)/(float)4095) * 10;
-    Serial.printf("Current: %.2f A\r\n", finalMeasure);
     return finalMeasure;
   }
 }
+
+void onWebSocketEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len) {
+  if (type == WS_EVT_CONNECT) {
+    Serial.println("ESP - WebSocket connected!");
+  } else if (type == WS_EVT_DISCONNECT) {
+    Serial.println("ESP - WebSocket disconnected!");
+  }
+}
+
 
 void setup() 
 {
@@ -322,7 +332,10 @@ void setup()
     readJson("/alarms.json");
     request->send(200, "application/json", storeAlarm);
   });
-  
+
+  ws.onEvent(onWebSocketEvent);
+  server.addHandler(&ws);
+
   server.begin();
 }
 
@@ -330,4 +343,16 @@ void loop()
 {
   powerButton = digitalRead(clockWiseButton);
   turnON(webPower || powerButton);
+
+  if(webPower || powerButton)
+  {
+    if(millis() - sendPower >= 500)
+    {
+      float power =  analogFilter(measurePin, 2500) * 3.7;
+      String socketMsg = "{\"power\":\"" + String(power) + "\"}";
+      ws.textAll(socketMsg);
+      Serial.println(socketMsg);
+      sendPower = millis();
+    }
+  }
 }

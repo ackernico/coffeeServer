@@ -1,3 +1,6 @@
+let socket = new WebSocket("ws://192.168.0.2/ws");
+const ip = "http://192.168.0.2";
+
 const sections = document.querySelectorAll('.sections');
 const getActive = document.getElementById('active');
 const display = document.getElementById('display-container');
@@ -6,6 +9,11 @@ const initalContent = document.getElementById('startContent');
 const template = document.getElementById('alarmObjectTemp');
 let alarms = [];
 let grindState = false;
+let timer = false;
+let min = 0;
+let secs = 0;
+let timeString;
+let timerID = null;
 
 const sectionContent = [];
 const methods = 
@@ -91,8 +99,7 @@ function adjustTime(arrow, timeReset, order)
 
 async function talk2ESP32(method, route, jsonData)
 {
-    const aux = "http://192.168.0.2";
-    const address = aux + route;
+    const address = ip + route;
 
     const labels = 
     {
@@ -180,10 +187,13 @@ function toggleStart()
     };
 
     grindState = !grindState;
+    timer = grindState;
 
     if(grindState)
     {
         startData.status = "on";
+        secs = -1;
+        grindTimer();
         document.getElementById('startContent').classList.remove('show');
         document.getElementById('grindMeasurements').classList.add('show');
         document.getElementById('measurementLabel').classList.add('show');
@@ -196,10 +206,31 @@ function toggleStart()
         document.getElementById('grindMeasurements').classList.remove('show');
         document.getElementById('measurementLabel').classList.remove('show');
         document.getElementById('buttonLabel').innerText = "ON";
+        clearTimeout(timerID);
+        timerID = null;
     }
 
     startData.thickness = document.querySelector('#startContent .thickness').value;
     talk2ESP32("POST", "/on", startData);
+}
+
+function grindTimer()
+{
+    timerID = setTimeout(grindTimer, 1000);
+    if(timer)
+    {
+        secs++;
+        if(secs >= 60)
+        {
+            secs = 0;
+            min++;
+        }
+    }   
+    min = String(min).padStart(2, '0');
+    secs = String(secs).padStart(2, '0');
+    timeString = min + ":" + secs;
+    document.getElementById('measureTime').innerText = timeString;
+    console.log(timeString);
 }
 
 function toggleAlarm(element)
@@ -371,3 +402,16 @@ sections.forEach(sec =>
         }, 200);
     });
 });
+
+socket.onmessage = function(event)
+{
+    const data = JSON.parse(event.data);
+    const power = data.power;
+    document.getElementById('measurePower').innerText = power + " W";
+};
+
+socket.onopen = () => console.log("Web - WebSocket connected!");
+socket.onclose = () => console.log("Web - WebSocket disconnected!");
+
+
+
