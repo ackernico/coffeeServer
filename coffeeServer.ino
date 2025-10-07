@@ -16,8 +16,13 @@ String storeAlarm = "[]";
 Servo servo;
 bool powerButton;
 int offset;
+float power;
 bool webPower = false;
+bool aux = false;
 long sendPower;
+long offTimer;
+bool buttonSustain = false;
+bool lastButton = false;
 
 /*Pins declaration*/
 const int clockWiseButton = 15;
@@ -342,17 +347,37 @@ void setup()
 void loop() 
 {
   powerButton = digitalRead(clockWiseButton);
-  turnON(webPower || powerButton);
+
+  if(powerButton && !lastButton) buttonSustain = !buttonSustain;
+  lastButton = powerButton;
+
+  turnON(webPower || buttonSustain);
 
   if(webPower || powerButton)
   {
     if(millis() - sendPower >= 500)
     {
-      float power =  analogFilter(measurePin, 2500) * 3.7;
+      power =  analogFilter(measurePin, 2500) * 3.7;
       String socketMsg = "{\"power\":\"" + String(power) + "\"}";
       ws.textAll(socketMsg);
-      Serial.println(socketMsg);
       sendPower = millis();
+    }
+    
+    if((power/3.7) <= 2)
+    {
+      if(!aux)
+      {
+        aux = true;
+        offTimer = millis();
+      }
+      if(millis() - offTimer >= 4500)
+      {
+        turnOFF();
+        ws.textAll("{\"state\":\"true\"}");
+        Serial.println("Button clicked!");
+        webPower = false;
+        aux = false;
+      }
     }
   }
 }

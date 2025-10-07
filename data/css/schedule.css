@@ -45,14 +45,16 @@
 {
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
+    overflow-y: auto;
 
     width: 550px;   
-    height: 100%;
-    transform: translate(50%);
-
     gap: 20px;
+    scroll-padding-top: 20px;
+    scroll-padding-bottom: 20px;
+    height: 81%;
+    transform: translate(50%);
     flex: 1;
     
     transition: all ease-in-out 150ms;

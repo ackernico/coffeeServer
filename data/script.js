@@ -37,8 +37,17 @@ const methods =
     moka: `
     <img src="../assets/moka.png">
     <p>Moka Pot</p>
-    `,
+    `
 };
+
+const methodsClicks = 
+{
+    melitta : null,
+    v60 : null,
+    espresso : null,
+    french : null,
+    moka : null
+}
 
 const blankAlarm = `
     <div class="alarmObject">
@@ -178,7 +187,7 @@ function loadContent(content)
     }
 }
 
-function toggleStart() 
+function toggleStart(isFavorite) 
 {
     let startData =
     {
@@ -211,6 +220,9 @@ function toggleStart()
     }
 
     startData.thickness = document.querySelector('#startContent .thickness').value;
+
+    if(!isFavorite) document.getElementById('measureThickness').innerText = startData.thickness + " clicks";
+    else if(isFavorite) document.getElementById('measureThickness').innerText = String(method);
     talk2ESP32("POST", "/on", startData);
 }
 
@@ -230,7 +242,6 @@ function grindTimer()
     secs = String(secs).padStart(2, '0');
     timeString = min + ":" + secs;
     document.getElementById('measureTime').innerText = timeString;
-    console.log(timeString);
 }
 
 function toggleAlarm(element)
@@ -406,8 +417,11 @@ sections.forEach(sec =>
 socket.onmessage = function(event)
 {
     const data = JSON.parse(event.data);
+    const buttonState = data.state;
     const power = data.power;
     document.getElementById('measurePower').innerText = power + " W";
+
+    if(buttonState) document.getElementById('onoffButton').click();
 };
 
 socket.onopen = () => console.log("Web - WebSocket connected!");
