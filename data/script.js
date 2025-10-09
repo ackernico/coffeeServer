@@ -47,7 +47,7 @@ const methodsClicks =
     espresso : null,
     french : null,
     moka : null
-}
+}   
 
 const blankAlarm = `
     <div class="alarmObject">
@@ -61,7 +61,10 @@ const blankAlarm = `
                 </label>
             </div>
         </div>
-        <p class="alarmRepeat"></p>
+        <div class="alarmData">
+            <p class="alarmRepeat"></p>
+            <p class="alarmThickness"></p>
+        </div>
     </div>
 `;
 
@@ -177,7 +180,7 @@ function loadContent(content)
             {
                 if(alarms[i] != undefined)
                 {
-                    createAlarmObject(i, alarms[i].name, alarms[i].timeH, alarms[i].timeM, alarms[i].repeatS);
+                    createAlarmObject(i, alarms[i].name, alarms[i].timeH, alarms[i].timeM, alarms[i].repeatS, alarms[i].thickness);
                 }
             }
             console.log(alarms);
@@ -255,6 +258,7 @@ function toggleAlarm(element)
     const minute = alarm.querySelector('.alarmHour').innerText.substring(3, 5);
     const alarmName = alarm.querySelector('.alarmName').innerText;
     const repeat = alarm.querySelector('.alarmRepeat').innerText;
+    const thickness  = alarm.querySelector('.alarmThickness').innerText;
 
     let repeats = []
 
@@ -283,7 +287,8 @@ function toggleAlarm(element)
         timeM : minute,
         repeat: repeats,
         repeatS: repeat,
-        name : alarmName
+        name : alarmName,
+        thickness : parseInt(thickness.match(/\d+/g))
     };
     talk2ESP32("POST", "/alarms", alarms[index]);
 }
@@ -306,7 +311,7 @@ function toggleAlarmView(mode)
 
 }
 
-function createAlarmObject(idx, name, timeH, timeM, aString)
+function createAlarmObject(idx, name, timeH, timeM, aString, thick)
 {
     document.getElementById('alarms').insertAdjacentHTML('beforeend', blankAlarm);
 
@@ -314,8 +319,10 @@ function createAlarmObject(idx, name, timeH, timeM, aString)
     newAlarmObject.children[0].innerText = name;
     newAlarmObject.children[1].children[0].innerText = timeH + ":" + timeM;
     newAlarmObject.children[1].children[1].querySelector('.alarmCheckbox').checked = true;
-    newAlarmObject.children[2].innerText = aString;
+    newAlarmObject.children[2].childNodes[1].innerText = aString;
+    newAlarmObject.children[2].childNodes[3].innerText = thick + " clicks";
     toggleAlarm(document.querySelectorAll('.alarmObject .alarmCheckbox')[idx]);
+    console.log(newAlarmObject);
 }
 
 function saveAlarm()
@@ -324,6 +331,7 @@ function saveAlarm()
     const alarmTime = [];
     const index = Array.from(document.querySelectorAll("#alarms .alarmObject")).length;
     const repeatInputs = document.getElementById('getRepeat');
+    const alarmThickness = document.querySelector('.thickness').value;
     let alarmString = "Once";
     let aux = 0;
     let repeats = [];
@@ -361,11 +369,12 @@ function saveAlarm()
         timeM : alarmTime[1],
         repeat: repeats,
         repeatS: alarmString,
-        name : alarmName
+        name : alarmName,
+        thickness : parseInt(alarmThickness.match(/\d+/g))
     };
 
     document.getElementById('getName').value = "";
-    createAlarmObject(index, alarmName, alarmTime[0], alarmTime[1], alarmString);
+    createAlarmObject(index, alarmName, alarmTime[0], alarmTime[1], alarmString, parseInt(alarmThickness.match(/\d+/g)));
     
     toggleAlarmView('r');
     console.log(alarms);

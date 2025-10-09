@@ -138,6 +138,7 @@ void turnON(bool webButton, int thickness = 11)
 
 void turnOFF()
 {
+  offTimer = millis();
   digitalWrite(clockWisePin, LOW);
   servo.write(45);
 }
@@ -292,6 +293,10 @@ void setup()
       const char* timeH = incoming["timeH"] | "";
       const char* timeM = incoming["timeM"] | "";
       const char* name = incoming["name"] | "";
+
+      String thickness = incoming["thickness"].as<String>();
+      String repeatS = incoming["repeatS"].as<String>();
+
       bool repeat[7] = {false, false, false, false, false, false, false};
       if (incoming.containsKey("repeat") && incoming["repeat"].is<JsonArray>()) {
           JsonArray repeatArr = incoming["repeat"].as<JsonArray>();
@@ -299,8 +304,7 @@ void setup()
               repeat[i] = repeatArr[i].as<bool>();
           }
       }
-      const char* repeatS = incoming["repeatS"] | "";
-      
+
       DynamicJsonDocument doc(4096);
       DeserializationError err2 = deserializeJson(doc, storeAlarm);
       if (err2) {
@@ -321,8 +325,13 @@ void setup()
       slot["timeH"] = timeH;
       slot["timeM"] = timeM;
       slot["name"] = name;
-      slot["repeat"] = repeat;
+      slot["thickness"] = thickness;
       slot["repeatS"] = repeatS;
+
+      JsonArray repeatArrOut = slot.createNestedArray("repeat");
+      for (int i = 0; i < 7; i++) {
+          repeatArrOut.add(repeat[i]);
+      }
 
       String out;
       serializeJson(arr, out);
@@ -348,16 +357,20 @@ void loop()
 {
   powerButton = digitalRead(clockWiseButton);
 
-  if(powerButton && !lastButton) buttonSustain = !buttonSustain;
+  if(powerButton && !lastButton)
+  {
+    buttonSustain = !buttonSustain;
+    ws.textAll("{\"state\":\"true\"}");
+  } 
   lastButton = powerButton;
 
   turnON(webPower || buttonSustain);
 
-  if(webPower || powerButton)
+  if(webPower || buttonSustain)
   {
     if(millis() - sendPower >= 500)
     {
-      power =  analogFilter(measurePin, 2500) * 3.7;
+      power = analogFilter(measurePin, 2500) * 3.7;
       String socketMsg = "{\"power\":\"" + String(power) + "\"}";
       ws.textAll(socketMsg);
       sendPower = millis();
@@ -374,8 +387,9 @@ void loop()
       {
         turnOFF();
         ws.textAll("{\"state\":\"true\"}");
-        Serial.println("Button clicked!");
+        Serial.println("Button turned off!");
         webPower = false;
+        buttonSustain = false;
         aux = false;
       }
     }
