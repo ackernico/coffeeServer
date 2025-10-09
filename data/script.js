@@ -77,7 +77,6 @@ async function loadSectionPartials()
         home: '/html/home.html',
         schedule: '/html/schedule.html',
         profiles: '/html/profiles.html',
-        settings: '/html/settings.html'
     };
 
     const entries = await Promise.all(
