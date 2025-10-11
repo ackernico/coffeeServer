@@ -5,24 +5,47 @@
 #include <ESP32Servo.h>
 #include <string>
 #include <iostream>
+#include <vector>
 
 /*Network credentials*/
 const char* ssid = "Nicolas_2.4G";
 const char* pass = "nicolas2006";
 
-/*Auxiliar variables*/
+/*Variables*/
+AsyncWebServer server(80);
+AsyncWebSocket ws("/ws");
+
+Servo servo;
+
 String grinderState;
 String storeAlarm = "[]";
-Servo servo;
+
 bool powerButton;
-int offset;
-float power;
 bool webPower = false;
 bool aux = false;
-long sendPower;
-long offTimer;
 bool buttonSustain = false;
 bool lastButton = false;
+
+int offset;
+
+float power;
+
+long sendPower;
+long offTimer;
+
+struct Alarm
+{
+  int index;
+  bool status;
+  int timeH;
+  int timeM;
+  String name;
+  int thickness;
+  String repeatS;
+  bool repeat[7];
+};
+
+std::vector<Alarm> alarms;
 
 /*Pins declaration*/
 const int clockWiseButton = 15;
@@ -31,9 +54,6 @@ const int clockWisePin = 13;
 const int counterClockWisePin = 12;
 const int servoPin = 18;
 const int measurePin = 35;
-
-AsyncWebServer server(80);
-AsyncWebSocket ws("/ws");
 
 void listDir(fs::FS &fs = LittleFS, const char * dirname = "/", uint8_t levels = 1)
 {
@@ -280,7 +300,6 @@ void setup()
       String body;
       body.reserve(len + 1);
       for (size_t i = 0; i < len; ++i) body += (char)data[i];
-      Serial.println("Received alarms POST: " + body);
 
       DynamicJsonDocument incoming(512);
       if (deserializeJson(incoming, body)) {
@@ -290,11 +309,10 @@ void setup()
 
       int idx = incoming["index"] | -1;
       bool status = incoming["status"] | false;
-      const char* timeH = incoming["timeH"] | "";
-      const char* timeM = incoming["timeM"] | "";
+      int timeH = incoming["timeH"] | -1;
+      int timeM = incoming["timeM"] | -1;
+      int thickness = incoming["thickness"] | -1;
       const char* name = incoming["name"] | "";
-
-      String thickness = incoming["thickness"].as<String>();
       String repeatS = incoming["repeatS"].as<String>();
 
       bool repeat[7] = {false, false, false, false, false, false, false};
@@ -332,6 +350,18 @@ void setup()
       for (int i = 0; i < 7; i++) {
           repeatArrOut.add(repeat[i]);
       }
+
+      Alarm newAlarm;
+      newAlarm.index = idx;
+      newAlarm.status = status;
+      newAlarm.timeH = timeH;
+      newAlarm.timeM = timeM;
+      newAlarm.thickness = thickness;
+      newAlarm.name = name;
+      newAlarm.repeatS = repeatS;
+      for(int i=0 ; i<7 ; i++) newAlarm.repeat[i] = repeat[i];
+
+      alarms.push_back(newAlarm);
 
       String out;
       serializeJson(arr, out);

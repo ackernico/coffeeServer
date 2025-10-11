@@ -282,8 +282,8 @@ function toggleAlarm(element)
     {
         index : index,
         status : element.checked,
-        timeH : hour,
-        timeM : minute,
+        timeH : parseInt(hour),
+        timeM : parseInt(minute),
         repeat: repeats,
         repeatS: repeat,
         name : alarmName,
@@ -364,8 +364,8 @@ function saveAlarm()
     {
         index : index,
         status : true,
-        timeH : alarmTime[0],
-        timeM : alarmTime[1],
+        timeH : parseInt(alarmTime[0]),
+        timeM : parseInt(alarmTime[1]),
         repeat: repeats,
         repeatS: alarmString,
         name : alarmName,
