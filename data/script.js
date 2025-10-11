@@ -272,21 +272,7 @@ function toggleAlarm(element)
     } 
     else if(repeat == "No repeat")
     {
-        for(let i=0 ; i<=6 ; i++)
-        {
-            repeats[i] = false;
-        }
-    }
 
-    alarms[index] = 
-    {
-        index : index,
-        status : element.checked,
-        timeH : parseInt(hour),
-        timeM : parseInt(minute),
-        repeat: repeats,
-        repeatS: repeat,
-        name : alarmName,
         thickness : parseInt(thickness.match(/\d+/g))
     };
     talk2ESP32("POST", "/alarms", alarms[index]);

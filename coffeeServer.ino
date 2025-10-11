@@ -1,15 +1,24 @@
 #include <WiFi.h>
 #include <ESPAsyncWebServer.h>
+#include <ESP32Servo.h>
 #include <ArduinoJson.h>
 #include <LittleFS.h>
-#include <ESP32Servo.h>
+
 #include <string>
 #include <iostream>
 #include <vector>
 
+#include <time.h>
+#include <sntp.h>
+
 /*Network credentials*/
 const char* ssid = "Nicolas_2.4G";
 const char* pass = "nicolas2006";
+
+/*NTP Server credentials*/
+const char* ntpServer = "pool.ntp.org";
+const long gmtOffsetSec = -10800;
+const int  daylightOffsetSec = 0;
 
 /*Variables*/
 AsyncWebServer server(80);
@@ -27,6 +36,7 @@ bool buttonSustain = false;
 bool lastButton = false;
 
 int offset;
+int weekDay;
 
 float power;
 
@@ -43,7 +53,17 @@ struct Alarm
   int thickness;
   String repeatS;
   bool repeat[7];
+  bool triggered = false;
 };
+
+struct irt
+{
+  int hour;
+  int minute;
+  int weekDay;
+};
+
+irt realTime;
 
 std::vector<Alarm> alarms;
 
@@ -195,6 +215,27 @@ void onWebSocketEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsE
   }
 }
 
+int storeTime(bool printTime)
+{
+  struct tm timeinfo;
+  if(!getLocalTime(&timeinfo))
+  {
+    return -1;
+  } 
+  if(printTime) Serial.println(&timeinfo, "%B %d %Y %H:%M:%S");
+  
+  realTime.weekDay   = timeinfo.tm_wday;
+  realTime.hour      = timeinfo.tm_hour;
+  realTime.minute    = timeinfo.tm_min;
+
+  return 0;
+}
+
+void timeavailable(struct timeval *t)
+{
+  Serial.println("Got time adjustment from NTP!");
+  storeTime(false);
+}
 
 void setup() 
 {
@@ -210,6 +251,9 @@ void setup()
   pinMode(clockWisePin, OUTPUT);
   pinMode(counterClockWisePin, OUTPUT);
 
+  sntp_set_time_sync_notification_cb(timeavailable);
+  configTime(gmtOffsetSec, 0, ntpServer);
+
   if(!LittleFS.begin(true))
   {
     Serial.println("An error has occurred while mounting LittleFS");
@@ -224,6 +268,11 @@ void setup()
   }
   Serial.println("Connected!");
   Serial.println(WiFi.localIP());
+
+  Serial.print("Connecting to NTP server");
+  while(storeTime(false) != 0) Serial.print(".");
+  Serial.println("Connected!");
+
   offset = analogFilter(measurePin, 1200, true);
 
   listDir();
@@ -386,6 +435,7 @@ void setup()
 void loop() 
 {
   powerButton = digitalRead(clockWiseButton);
+  storeTime(false);
 
   if(powerButton && !lastButton)
   {
@@ -423,5 +473,18 @@ void loop()
         aux = false;
       }
     }
+  }
+
+  for(int i=0 ; i<alarms.size() ; i++)
+  {
+    if(!alarms[i].triggered && alarms[i].timeH == realTime.hour && alarms[i].timeM == realTime.minute && alarms[i].status)
+    {
+      turnON(true, alarms[i].thickness);
+      ws.textAll("{\"state\":\"true\"}");
+      alarms[i].triggered = true;
+      Serial.println(alarms[i].name);
+    }
+
+    if(alarms[i].timeM != realTime.minute) alarms[i].triggered = false;
   }
 }
