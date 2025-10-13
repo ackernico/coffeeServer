@@ -32,6 +32,7 @@ String storeAlarm = "[]";
 bool powerButton;
 bool webPower = false;
 bool aux = false;
+bool started = false;
 bool buttonSustain = false;
 bool lastButton = false;
 
@@ -42,6 +43,8 @@ float power;
 
 long sendPower;
 long offTimer;
+long startTime = 0;
+long elapsedTime = 0;
 
 struct Alarm
 {
@@ -171,7 +174,6 @@ void turnON(bool webButton, int thickness = 11)
   if(!webButton) turnOFF();
   else
   {
-    servo.write(25);
     digitalWrite(clockWisePin, HIGH);
   }
 }
@@ -448,6 +450,20 @@ void loop()
 
   if(webPower || buttonSustain)
   {
+    if(!started)
+    {
+      startTime = millis();
+      started = true;
+    }
+    else
+    {
+      elapsedTime = millis() - startTime;
+    } 
+
+    if(elapsedTime < 10000) servo.write(25);
+    else if(elapsedTime > 10000 && elapsedTime < 30000) servo.write(15);
+    else if (elapsedTime > 30000) servo.write(0);
+
     if(millis() - sendPower >= 500)
     {
       power = analogFilter(measurePin, 2500) * 3.7;
@@ -456,7 +472,7 @@ void loop()
       sendPower = millis();
     }
     
-    if((power/3.7) <= 2)
+    if((power/3.7) <= 1.65)
     {
       if(!aux)
       {
@@ -471,7 +487,16 @@ void loop()
         webPower = false;
         buttonSustain = false;
         aux = false;
+        if(elapsedTime >= 4500) ws.textAll("{\"register\":\"true\"}");
       }
+    }
+  }
+  else
+  {
+    if(started)
+    {
+      started = false;
+      elapsedTime = 0;
     }
   }
 

@@ -1,5 +1,5 @@
-let socket = new WebSocket("ws://192.168.0.2/ws");
-const ip = "http://192.168.0.2";
+let socket = new WebSocket("ws://192.168.0.4/ws");
+const ip = "http://192.168.0.4";
 
 const sections = document.querySelectorAll('.sections');
 const getActive = document.getElementById('active');
@@ -204,6 +204,7 @@ function toggleStart(isFavorite)
     {
         startData.status = "on";
         secs = -1;
+        min = -1;
         grindTimer();
         document.getElementById('startContent').classList.remove('show');
         document.getElementById('grindMeasurements').classList.add('show');
@@ -239,7 +240,7 @@ function grindTimer()
             secs = 0;
             min++;
         }
-    }   
+    }
     min = String(min).padStart(2, '0');
     secs = String(secs).padStart(2, '0');
     timeString = min + ":" + secs;
