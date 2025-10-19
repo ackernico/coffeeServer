@@ -7,6 +7,7 @@ const display = document.getElementById('display-container');
 const homeButtons = document.querySelectorAll('.homeButton');
 const initalContent = document.getElementById('startContent');
 const template = document.getElementById('alarmObjectTemp');
+
 let alarms = [];
 let grindState = false;
 let timer = false;
@@ -50,6 +51,7 @@ const methodsClicks =
 }   
 
 const blankAlarm = `
+<div class="alarmObjectContainer">
     <div class="alarmObject">
         <p class="alarmName"></p>
         <div class="alarmData">
@@ -66,6 +68,11 @@ const blankAlarm = `
             <p class="alarmThickness"></p>
         </div>
     </div>
+    <div class="editMode">
+        <img src="../assets/trash.png">
+    </div>
+</div>
+
 `;
 
 const method = 'moka';
@@ -179,7 +186,7 @@ function loadContent(content)
             {
                 if(alarms[i] != undefined)
                 {
-                    createAlarmObject(i, alarms[i].name, alarms[i].timeH, alarms[i].timeM, alarms[i].repeatS, alarms[i].thickness);
+                    createAlarmObject(i, alarms[i].name, String(alarms[i].timeH).padStart('2', 0), String(alarms[i].timeM).padStart('2', 0), alarms[i].repeatS, alarms[i].thickness);
                 }
             }
             console.log(alarms);
@@ -204,7 +211,7 @@ function toggleStart(isFavorite)
     {
         startData.status = "on";
         secs = -1;
-        min = -1;
+        min = 0;
         grindTimer();
         document.getElementById('startContent').classList.remove('show');
         document.getElementById('grindMeasurements').classList.add('show');
@@ -294,30 +301,52 @@ function toggleAlarmView(mode)
         editor.classList.remove('show');
         alarmsEl.classList.remove('show');
     }
-
 }
 
 function createAlarmObject(idx, name, timeH, timeM, aString, thick)
 {
     document.getElementById('alarms').insertAdjacentHTML('beforeend', blankAlarm);
 
-    const newAlarmObject = document.querySelectorAll('.alarmObject')[idx]
+    const newAlarmObject = document.querySelectorAll('.alarmObject')[idx];
+
     newAlarmObject.children[0].innerText = name;
     newAlarmObject.children[1].children[0].innerText = timeH + ":" + timeM;
     newAlarmObject.children[1].children[1].querySelector('.alarmCheckbox').checked = true;
     newAlarmObject.children[2].childNodes[1].innerText = aString;
     newAlarmObject.children[2].childNodes[3].innerText = thick + " clicks";
+
+    document.querySelectorAll('.alarmObjectContainer').forEach((obj, i) =>
+    {
+        const edit = obj.querySelector('.editMode');
+        obj.addEventListener('mouseenter', () =>
+        {
+            edit.classList.add('show');
+        });
+        obj.addEventListener('mouseleave', () =>
+        {
+            edit.classList.remove('show');
+        });
+
+        edit.addEventListener('click', async () =>
+        {
+            obj.remove();
+            alarms.splice(i, 1);
+            talk2ESP32("POST", "/alarms", alarms);
+        });
+    });
+
     toggleAlarm(document.querySelectorAll('.alarmObject .alarmCheckbox')[idx]);
     console.log(newAlarmObject);
 }
 
-function saveAlarm()
+function saveAlarm(editMode)
 {
     const alarmName = document.getElementById('getName').value || "New Alarm";
     const alarmTime = [];
     const index = Array.from(document.querySelectorAll("#alarms .alarmObject")).length;
     const repeatInputs = document.getElementById('getRepeat');
     const alarmThickness = document.querySelector('.thickness').value;
+    
     let alarmString = "Once";
     let aux = 0;
     let repeats = [];
@@ -366,6 +395,24 @@ function saveAlarm()
     console.log(alarms);
 }
 
+function insertRecent(duration, date, thickness)
+{
+    const table = document.getElementById('recentTable').children[0];
+    const rowIndex = table.children[0].childElementCount;
+
+    const row = table.insertRow(rowIndex);
+
+    const tableDuration = row.insertCell(0);
+    const tableDate = row.insertCell(1);
+    const tableThickness = row.insertCell(2);
+
+    tableDuration.innerText = duration;
+    tableDate.innerText = date;
+    tableThickness.innerText = thickness;
+
+    console.log(table);
+}
+
 document.addEventListener('DOMContentLoaded', async () =>
 {
     try
@@ -409,18 +456,40 @@ sections.forEach(sec =>
     });
 });
 
+document.querySelectorAll('.alarmObjectContainer').forEach(obj =>
+{
+    console.log(obj);
+});
+
 socket.onmessage = function(event)
 {
-    const data = JSON.parse(event.data);
-    const buttonState = data.state;
-    const power = data.power;
+    let data = JSON.parse(event.data);
+    let buttonState = data.state;
+    let power = data.power;
+    let registerGrind = data.register;
+
     document.getElementById('measurePower').innerText = power + " W";
 
     if(buttonState) document.getElementById('onoffButton').click();
+
+    if(registerGrind)
+    {
+        const today = new Date();
+
+        const dur = document.getElementById('measureTime').textContent;
+        const dat = String(today.getDate() + "/" + (today.getMonth() + 1));
+        const thic = document.getElementById('measureThickness').textContent;
+
+        let recentInfo = 
+        {
+            duration: dur,
+            date : dat,
+            thickness : thic
+        }
+        insertRecent(dur, dat, thic);
+        talk2ESP32('POST', "/data", recentInfo);
+    }
 };
 
 socket.onopen = () => console.log("Web - WebSocket connected!");
 socket.onclose = () => console.log("Web - WebSocket disconnected!");
-
-
-

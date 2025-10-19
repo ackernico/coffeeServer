@@ -5,11 +5,16 @@
 #include <LittleFS.h>
 
 #include <string>
-#include <iostream>
 #include <vector>
+#include <fstream>
 
 #include <time.h>
 #include <sntp.h>
+
+#include "inc/webserver.h"
+#include "inc/fileManager.h"
+#include "inc/timeManager.h"
+#include "inc/globals.h"
 
 /*Network credentials*/
 const char* ssid = "Nicolas_2.4G";
@@ -21,23 +26,20 @@ const long gmtOffsetSec = -10800;
 const int  daylightOffsetSec = 0;
 
 /*Variables*/
-AsyncWebServer server(80);
-AsyncWebSocket ws("/ws");
-
 Servo servo;
 
+std::ofstream file("grinderLog.json");
+
 String grinderState;
-String storeAlarm = "[]";
 
 bool powerButton;
-bool webPower = false;
 bool aux = false;
 bool started = false;
 bool buttonSustain = false;
 bool lastButton = false;
 
+static int lowCount = 0;
 int offset;
-int weekDay;
 
 float power;
 
@@ -46,30 +48,6 @@ long offTimer;
 long startTime = 0;
 long elapsedTime = 0;
 
-struct Alarm
-{
-  int index;
-  bool status;
-  int timeH;
-  int timeM;
-  String name;
-  int thickness;
-  String repeatS;
-  bool repeat[7];
-  bool triggered = false;
-};
-
-struct irt
-{
-  int hour;
-  int minute;
-  int weekDay;
-};
-
-irt realTime;
-
-std::vector<Alarm> alarms;
-
 /*Pins declaration*/
 const int clockWiseButton = 15;
 const int counterClockWiseButton = 2;
@@ -77,97 +55,7 @@ const int clockWisePin = 13;
 const int counterClockWisePin = 12;
 const int servoPin = 18;
 const int measurePin = 35;
-
-void listDir(fs::FS &fs = LittleFS, const char * dirname = "/", uint8_t levels = 1)
-{
-    File root = fs.open(dirname);
-    if(!root)
-    {
-        Serial.println("- failed to open directory");
-        return;
-    }
-    if(!root.isDirectory())
-    {
-        Serial.println(" - not a directory");
-        return;
-    }
-
-    File file = root.openNextFile();
-    while(file)
-    {
-        if(file.isDirectory())
-        {
-            Serial.print("  DIR : ");
-            Serial.printf("    %s\n", file.name());
-            if(levels)
-            {
-                listDir(fs, file.path(), levels -1);
-            }
-        } 
-        else 
-        {
-            Serial.print("  FILE: ");
-            Serial.print(file.name());
-            Serial.print("\tSIZE: ");
-            Serial.println(file.size());
-        }
-        file = root.openNextFile();
-    }
-}
-
-void writeJson(const char* path, const char* message, fs::FS &fs = LittleFS)
-{
-  Serial.printf("Writing file on %s\r\n", path);
-
-  File alarmJSON;
-  alarmJSON = fs.open(path, FILE_WRITE);
-
-  if(!alarmJSON)
-  {
-    Serial.println("Error while opening file");
-    return;
-  }
-
-  if(alarmJSON.print(message))
-  {
-    Serial.println("Alarms stored!");
-  }
-  else Serial.println("Error while writing file");
-  
-  alarmJSON.close();
-}
-
-void readJson(const char* path, fs::FS &fs = LittleFS)
-{
-  Serial.printf("Reading file on %s\r\n", path);
-
-  File alarmJSON;
-  alarmJSON = fs.open(path);
-
-  size_t fileSize = alarmJSON.size();
-  char* outJSON = new char[fileSize + 1];
-  
-  if(!alarmJSON)
-  {
-    Serial.println("Error while opening file");
-    return;
-  }
-
-  size_t i = 0;
-  while(alarmJSON.available())
-  {
-    *(outJSON + i) = (char)alarmJSON.read();
-    i++;
-  }
-  outJSON[i] = '\0';
-
-  storeAlarm = outJSON;
-  Serial.println(storeAlarm);
-
-  Serial.println("Alarms read!");
-  delete[] outJSON;
-  alarmJSON.close();
-}
+const int ntpPin = 25;
 
 void turnON(bool webButton, int thickness = 11)
 {
@@ -209,36 +97,6 @@ float analogFilter(int pin, int samples, bool calibrate = false)
   }
 }
 
-void onWebSocketEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len) {
-  if (type == WS_EVT_CONNECT) {
-    Serial.println("ESP - WebSocket connected!");
-  } else if (type == WS_EVT_DISCONNECT) {
-    Serial.println("ESP - WebSocket disconnected!");
-  }
-}
-
-int storeTime(bool printTime)
-{
-  struct tm timeinfo;
-  if(!getLocalTime(&timeinfo))
-  {
-    return -1;
-  } 
-  if(printTime) Serial.println(&timeinfo, "%B %d %Y %H:%M:%S");
-  
-  realTime.weekDay   = timeinfo.tm_wday;
-  realTime.hour      = timeinfo.tm_hour;
-  realTime.minute    = timeinfo.tm_min;
-
-  return 0;
-}
-
-void timeavailable(struct timeval *t)
-{
-  Serial.println("Got time adjustment from NTP!");
-  storeTime(false);
-}
-
 void setup() 
 {
   Serial.begin(115200);
@@ -250,8 +108,12 @@ void setup()
 
   pinMode(clockWiseButton, INPUT);
   pinMode(counterClockWiseButton, INPUT);
+
   pinMode(clockWisePin, OUTPUT);
   pinMode(counterClockWisePin, OUTPUT);
+  pinMode(ntpPin, OUTPUT);
+
+  digitalWrite(ntpPin, LOW);
 
   sntp_set_time_sync_notification_cb(timeavailable);
   configTime(gmtOffsetSec, 0, ntpServer);
@@ -279,159 +141,7 @@ void setup()
 
   listDir();
 
-  DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
-
-  // HTML files route
-  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send(LittleFS, "/html/index.html", String(), false);
-  });
-  
-  // Partials files route
-  server.serveStatic("/html", LittleFS, "/html/");
-  server.serveStatic("/css", LittleFS, "/css/");
-  server.serveStatic("/assets", LittleFS, "/assets/");
-
-  // JS file route
-   server.on("/script.js", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send(LittleFS, "/script.js", "text/javascript");
-  });
-  // Font file route
-  server.on("/Inter.woff2", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send(LittleFS, "/Inter.woff2", "font/woff2");
-  });
-  
-  server.on("/on", HTTP_POST, [](AsyncWebServerRequest *request){},
-  NULL, [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) 
-    {
-      String body;
-      for(size_t i=0 ; i<len ; i++)
-      {
-        body += (char)data[i];
-      }
-      Serial.println("Received message: " + body);
-
-      StaticJsonDocument<200> doc;
-      DeserializationError err = deserializeJson(doc, body);
-      if(err)
-      {
-        request->send(400, "application/json", "{\"error\":\"invalidJSON\"}");
-        return;
-      }
-
-      const char* status = doc["status"];
-      const char* thickness = doc["thickness"];
-
-      std::string sStatus = status;
-
-      if(sStatus == "on") webPower = true;
-      else if(sStatus == "off") webPower = false;
-
-      String response;
-      StaticJsonDocument<200> respDoc;
-      respDoc["received"] = true;
-      respDoc["status"] = status;
-      respDoc["thickness"] = thickness;
-      serializeJson(respDoc, response);
-
-      request->send(200, "application/json", response);
-    });
-
-    server.on("/on", HTTP_OPTIONS, [](AsyncWebServerRequest *request)
-    {
-      AsyncWebServerResponse *response = request->beginResponse(204);
-      response->addHeader("Access-Control-Allow-Origin", "*");
-      response->addHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-      response->addHeader("Access-Control-Allow-Headers", "Content-Type");
-      request->send(response);
-    });
-
-    server.on("/alarms", HTTP_POST, [](AsyncWebServerRequest *request) { },
-    NULL,
-    [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) {
-      String body;
-      body.reserve(len + 1);
-      for (size_t i = 0; i < len; ++i) body += (char)data[i];
-
-      DynamicJsonDocument incoming(512);
-      if (deserializeJson(incoming, body)) {
-        request->send(400, "application/json", "{\"error\":\"invalid json\"}");
-        return;
-      }
-
-      int idx = incoming["index"] | -1;
-      bool status = incoming["status"] | false;
-      int timeH = incoming["timeH"] | -1;
-      int timeM = incoming["timeM"] | -1;
-      int thickness = incoming["thickness"] | -1;
-      const char* name = incoming["name"] | "";
-      String repeatS = incoming["repeatS"].as<String>();
-
-      bool repeat[7] = {false, false, false, false, false, false, false};
-      if (incoming.containsKey("repeat") && incoming["repeat"].is<JsonArray>()) {
-          JsonArray repeatArr = incoming["repeat"].as<JsonArray>();
-          for (size_t i = 0; i < 7 && i < repeatArr.size(); ++i) {
-              repeat[i] = repeatArr[i].as<bool>();
-          }
-      }
-
-      DynamicJsonDocument doc(4096);
-      DeserializationError err2 = deserializeJson(doc, storeAlarm);
-      if (err2) {
-        doc.clear();
-        doc.to<JsonArray>();
-      }
-
-      JsonArray arr = doc.as<JsonArray>();
-
-      while ((int)arr.size() <= idx) {
-        arr.createNestedObject();
-      }
-
-      JsonObject slot = arr[idx].as<JsonObject>();
-      slot["received"] = true;
-      slot["index"] = idx;
-      slot["status"] = status;
-      slot["timeH"] = timeH;
-      slot["timeM"] = timeM;
-      slot["name"] = name;
-      slot["thickness"] = thickness;
-      slot["repeatS"] = repeatS;
-
-      JsonArray repeatArrOut = slot.createNestedArray("repeat");
-      for (int i = 0; i < 7; i++) {
-          repeatArrOut.add(repeat[i]);
-      }
-
-      Alarm newAlarm;
-      newAlarm.index = idx;
-      newAlarm.status = status;
-      newAlarm.timeH = timeH;
-      newAlarm.timeM = timeM;
-      newAlarm.thickness = thickness;
-      newAlarm.name = name;
-      newAlarm.repeatS = repeatS;
-      for(int i=0 ; i<7 ; i++) newAlarm.repeat[i] = repeat[i];
-
-      alarms.push_back(newAlarm);
-
-      String out;
-      serializeJson(arr, out);
-      storeAlarm = out;
-      writeJson("/alarms.json", storeAlarm.c_str());
-      readJson("/alarms.json");
-
-      request->send(200, "application/json", storeAlarm);
-    });
-
-  server.on("/alarms", HTTP_GET, [](AsyncWebServerRequest *request) {
-    readJson("/alarms.json");
-    request->send(200, "application/json", storeAlarm);
-  });
-
-  ws.onEvent(onWebSocketEvent);
-  server.addHandler(&ws);
-
-  server.begin();
+  configServer();
 }
 
 void loop() 
@@ -462,33 +172,48 @@ void loop()
 
     if(elapsedTime < 10000) servo.write(25);
     else if(elapsedTime > 10000 && elapsedTime < 30000) servo.write(15);
-    else if (elapsedTime > 30000) servo.write(0);
+    else if (elapsedTime > 50000) servo.write(0);
 
-    if(millis() - sendPower >= 500)
+    if(millis() - sendPower >= 400)
     {
-      power = analogFilter(measurePin, 2500) * 3.7;
+      power = analogFilter(measurePin, 2500);
       String socketMsg = "{\"power\":\"" + String(power) + "\"}";
       ws.textAll(socketMsg);
       sendPower = millis();
+      
+      powerSum += power;
+      powerSamples++;
     }
     
-    if((power/3.7) <= 1.65)
+    if((power) <= 1.68)
     {
       if(!aux)
       {
         aux = true;
         offTimer = millis();
       }
-      if(millis() - offTimer >= 4500)
+      else
+      {
+        lowCount++;
+      }
+
+      if((millis() - offTimer >= 4500) && lowCount >= 10)
       {
         turnOFF();
+        if(elapsedTime >= 10000) ws.textAll("{\"register\":\"true\"}");
         ws.textAll("{\"state\":\"true\"}");
         Serial.println("Button turned off!");
         webPower = false;
         buttonSustain = false;
         aux = false;
-        if(elapsedTime >= 4500) ws.textAll("{\"register\":\"true\"}");
+        powerSamples = 0;
+        powerSum = 0;
       }
+    }
+    else
+    {
+      aux = false;
+      lowCount = 0;
     }
   }
   else

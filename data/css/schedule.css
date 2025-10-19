@@ -48,13 +48,13 @@
     justify-content: flex-start;
     align-items: center;
     overflow-y: auto;
+    overflow-x: hidden;
 
-    width: 550px;   
     gap: 20px;
     scroll-padding-top: 20px;
     scroll-padding-bottom: 20px;
     height: 81%;
-    transform: translate(50%);
+    transform: translate(45%);
     flex: 1;
     
     transition: all ease-in-out 150ms;
@@ -74,7 +74,7 @@
 
 #alarmEditor
 {
-    width: calc(90% - 550px);  
+    width: calc(85% - 550px);  
     height: 85%;
     margin: 0 20px 0 20px;
     padding: 25px 0 25px 0;
@@ -243,11 +243,57 @@
     background-color: var(--tone3);
 }
 
+.alarmObjectContainer
+{
+    width: 100%;
+    gap: 20px;    
+    padding-left: 50px;
+
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.editMode
+{
+    width: 70px;
+    height: 70px;
+    border-radius: 15px;
+    opacity: 0;
+    
+    background-color: var(--tone4);
+    cursor: initial;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    transform: translateX(-100px);
+    pointer-events: none;
+    transition: all ease-in-out 150ms;
+}
+.editMode img
+{
+    width: 40px;
+    height: 40px;
+}
+.editMode:hover
+{
+    background-color: var(--tone3);
+    cursor: pointer;
+}
+.editMode.show
+{
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: all;
+}
+
 .alarmObject
 {
     font-size: 18px;
-    width: 100%;
-    border-radius: 20px;
+    width: 80%;
+    border-radius: 25px;
+
     background-color: var(--tone4);
 }
 .alarmObject > p
