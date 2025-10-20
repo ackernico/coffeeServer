@@ -160,49 +160,65 @@ void configServer()
       request->send(200, "application/json", storeAlarm);
     });
 
-    server.on("/data", HTTP_POST, [](AsyncWebServerRequest *request){},
-  NULL, [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) 
-    {
+    server.on("/data", HTTP_POST, [](AsyncWebServerRequest* request) {}, NULL,
+    [](AsyncWebServerRequest* request, uint8_t* data, size_t len, size_t index, size_t total) {
       String body;
-      for(size_t i=0 ; i<len ; i++)
-      {
-        body += (char)data[i];
-      }
-      Serial.println("Received message: " + body);
+      body.reserve(len + 1);
+      for (size_t i = 0; i < len; ++i) body += (char)data[i];
 
-      StaticJsonDocument<200> doc;
-      DeserializationError err = deserializeJson(doc, body);
-      if(err)
-      {
-        request->send(400, "application/json", "{\"error\":\"invalidJSON\"}");
+      // Desserializa apenas a entrada recebida
+      DynamicJsonDocument incoming(512);
+      DeserializationError err = deserializeJson(incoming, body);
+      if (err) {
+        request->send(400, "application/json", "{\"error\":\"invalid json\"}");
         return;
       }
 
-      const char* duration = doc["duration"];
-      const char* date = doc["date"];
-      const char* thickness = doc["thickness"];
+      // Extrai valores
+      const char* date = incoming["date"] | "";
+      const char* duration = incoming["duration"] | "";
+      const char* power = incoming["power"] | "";
+      const char* thickness = incoming["thickness"] | "";
 
-      String response;
-      StaticJsonDocument<200> respDoc;
-      respDoc["received"] = true;
-      respDoc["duration"] = duration;
-      respDoc["date"] = date;
-      respDoc["thickness"] = thickness;
-      float avg = 0;
-      if (powerSamples > 0)
-        avg = (float)powerSum / powerSamples;
-      else
-        avg = 0;
-      respDoc["avgPower"] = avg;
+      DynamicJsonDocument slotDoc(256);
+      JsonObject slot = slotDoc.to<JsonObject>();
+      slot["date"] = date;
+      slot["duration"] = duration;
+      slot["power"] = power;
+      slot["thickness"] = thickness;
 
-      serializeJson(respDoc, response);
+      DynamicJsonDocument doc(4096);
+      DeserializationError err2 = deserializeJson(doc, storeLog);
+      JsonArray arr;
+      if (err2 || !doc.is<JsonArray>()) {
+        arr = doc.to<JsonArray>();
+      } else {
+        arr = doc.as<JsonArray>();
+      }
 
-      request->send(200, "application/json", response);
+      arr.add(slot);
+
+      if (arr.size() > 100) {
+        arr.remove(0);
+      }
+
+      // Atualiza RAM e NVS
+      String out;
+      serializeJson(arr, out);
+      storeLog = out;
+      writeNVS("log", storeLog.c_str());
+
+      request->send(200, "application/json", storeLog);
     });
 
   server.on("/alarms", HTTP_GET, [](AsyncWebServerRequest *request) {
-    readJson("/alarms.json");
+    storeAlarm = readNVS("alarms");
     request->send(200, "application/json", storeAlarm);
+  });
+
+  server.on("/data", HTTP_GET, [](AsyncWebServerRequest *request) {
+    storeLog = readNVS("log");
+    request->send(200, "application/json", storeLog);
   });
 
   ws.onEvent(onWebSocketEvent);

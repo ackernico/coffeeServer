@@ -9,6 +9,7 @@ const initalContent = document.getElementById('startContent');
 const template = document.getElementById('alarmObjectTemp');
 
 let alarms = [];
+let grindData = [];
 let grindState = false;
 let timer = false;
 let min = 0;
@@ -158,7 +159,7 @@ function loadContent(content)
     {
         case 'home':
             display.innerHTML = sectionContent['home'];
-            document.getElementById('favoriteMethod').innerHTML = methods[method];
+            document.getElementById('favoriteMethod').innerHTML = methods[method];       
             if(grindState)
             {
                 document.getElementById('startContent').classList.remove('show');
@@ -173,6 +174,13 @@ function loadContent(content)
                 document.getElementById('measurementLabel').classList.remove('show');
                 document.getElementById('buttonLabel').innerText = "ON";
             }
+
+            for (let i = 0; i < grindData.length; i++) 
+            {
+                insertRecent(grindData[i].duration, grindData[i].date, grindData[i].thickness, grindData[i].power);
+                console.log(i);
+            }     
+            console.log(grindData);
             break;
         case 'schedule':
             const checkbox = document.querySelectorAll('.alarmObject .alarmCheckbox');   
@@ -395,7 +403,7 @@ function saveAlarm(editMode)
     console.log(alarms);
 }
 
-function insertRecent(duration, date, thickness)
+function insertRecent(duration, date, thickness, power, loadInsert = false)
 {
     const table = document.getElementById('recentTable').children[0];
     const rowIndex = table.children[0].childElementCount;
@@ -405,12 +413,12 @@ function insertRecent(duration, date, thickness)
     const tableDuration = row.insertCell(0);
     const tableDate = row.insertCell(1);
     const tableThickness = row.insertCell(2);
+    const tablePower = row.insertCell(3);
 
     tableDuration.innerText = duration;
     tableDate.innerText = date;
     tableThickness.innerText = thickness;
-
-    console.log(table);
+    tablePower.innerText = power;
 }
 
 document.addEventListener('DOMContentLoaded', async () =>
@@ -426,8 +434,10 @@ document.addEventListener('DOMContentLoaded', async () =>
     
     try
     {
-        const data = await talk2ESP32("GET", "/alarms");
-        if(Array.isArray(data)) alarms = data;
+        const data1 = await talk2ESP32("GET", "/alarms");
+        const data2 = await talk2ESP32("GET", "/data");
+        if(Array.isArray(data1)) alarms = data1;
+        if(Array.isArray(data2)) grindData = data2;
     }
     catch(err)
     {
@@ -456,17 +466,13 @@ sections.forEach(sec =>
     });
 });
 
-document.querySelectorAll('.alarmObjectContainer').forEach(obj =>
-{
-    console.log(obj);
-});
-
 socket.onmessage = function(event)
 {
     let data = JSON.parse(event.data);
     let buttonState = data.state;
     let power = data.power;
     let registerGrind = data.register;
+    let avgPower = data.avgPower;
 
     document.getElementById('measurePower').innerText = power + " W";
 
@@ -480,14 +486,19 @@ socket.onmessage = function(event)
         const dat = String(today.getDate() + "/" + (today.getMonth() + 1));
         const thic = document.getElementById('measureThickness').textContent;
 
-        let recentInfo = 
+        const table = document.getElementById('recentTable').children[0];
+        const index = table.children[0].childElementCount;
+
+        const newEntry = 
         {
-            duration: dur,
+            duration : dur,
             date : dat,
-            thickness : thic
-        }
-        insertRecent(dur, dat, thic);
-        talk2ESP32('POST', "/data", recentInfo);
+            thickness : thic,
+            power : avgPower
+        };
+        grindData.push(newEntry);
+        insertRecent(newEntry.duration, newEntry.date, newEntry.thickness, newEntry.power);
+        talk2ESP32('POST', "/data", newEntry);
     }
 };
 

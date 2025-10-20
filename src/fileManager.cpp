@@ -1,7 +1,10 @@
 #include "../inc/fileManager.h"
+#include "../inc/globals.h"
+
 
 #include <LittleFS.h>
 #include <Arduino.h>
+#include <Preferences.h>
 
 void listDir(fs::FS &fs, const char * dirname, uint8_t levels)
 {
@@ -56,6 +59,7 @@ void writeJson(const char* path, const char* message, fs::FS &fs)
   if(alarmJSON.print(message))
   {
     Serial.println("Alarms stored!");
+    writeNVS(path, message);
   }
   else Serial.println("Error while writing file");
   
@@ -92,4 +96,31 @@ void readJson(const char* path, fs::FS &fs)
   Serial.println("Alarms read!");
   delete[] outJSON;
   alarmJSON.close();
+}
+
+void writeNVS(const char* key, const String& json)
+{
+  prefs.begin(key, false);
+  prefs.putString("data", json);
+  prefs.end();
+  Serial.println("String stored on non volatile!");
+}
+
+String readNVS(const char* key)
+{
+  prefs.begin(key, true);
+  String data = prefs.getString("data", "{}");
+
+  prefs.end();
+  Serial.println("String read on non volatile!");
+
+  return data;
+}
+
+void eraseNVS(const char* key)
+{
+  prefs.begin(key, false);
+  prefs.clear();
+  prefs.end();
+  Serial.println("Cleared!");
 }

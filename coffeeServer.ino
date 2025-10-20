@@ -6,7 +6,6 @@
 
 #include <string>
 #include <vector>
-#include <fstream>
 
 #include <time.h>
 #include <sntp.h>
@@ -27,8 +26,6 @@ const int  daylightOffsetSec = 0;
 
 /*Variables*/
 Servo servo;
-
-std::ofstream file("grinderLog.json");
 
 String grinderState;
 
@@ -56,6 +53,8 @@ const int counterClockWisePin = 12;
 const int servoPin = 18;
 const int measurePin = 35;
 const int ntpPin = 25;
+const int wifiPin = 32;
+const int buzzPin = 33;
 
 void turnON(bool webButton, int thickness = 11)
 {
@@ -111,9 +110,13 @@ void setup()
 
   pinMode(clockWisePin, OUTPUT);
   pinMode(counterClockWisePin, OUTPUT);
+  pinMode(wifiPin, OUTPUT);
   pinMode(ntpPin, OUTPUT);
+  pinMode(buzzPin, OUTPUT);
 
+  digitalWrite(wifiPin, LOW);
   digitalWrite(ntpPin, LOW);
+  digitalWrite(buzzPin, LOW);
 
   sntp_set_time_sync_notification_cb(timeavailable);
   configTime(gmtOffsetSec, 0, ntpServer);
@@ -131,10 +134,10 @@ void setup()
     Serial.print(".");
   }
   Serial.println("Connected!");
+  digitalWrite(wifiPin, HIGH);
   Serial.println(WiFi.localIP());
 
   Serial.print("Connecting to NTP server");
-  while(storeTime(false) != 0) Serial.print(".");
   Serial.println("Connected!");
 
   offset = analogFilter(measurePin, 1200, true);
@@ -142,12 +145,14 @@ void setup()
   listDir();
 
   configServer();
+
+  Serial.println(readNVS("log"));
 }
 
 void loop() 
 {
   powerButton = digitalRead(clockWiseButton);
-  storeTime(false);
+  if(storeTime(false) == 0) digitalWrite(ntpPin, HIGH);
 
   if(powerButton && !lastButton)
   {
@@ -181,7 +186,7 @@ void loop()
       ws.textAll(socketMsg);
       sendPower = millis();
       
-      powerSum += power;
+      powerSum += (power*100);
       powerSamples++;
     }
     
@@ -200,7 +205,8 @@ void loop()
       if((millis() - offTimer >= 4500) && lowCount >= 10)
       {
         turnOFF();
-        if(elapsedTime >= 10000) ws.textAll("{\"register\":\"true\"}");
+        String auxMsg = "{\"register\":\"true\",\"avgPower\":\"" + String(((float)powerSum/(float)powerSamples)/100) + "\"}";
+        if(elapsedTime >= 10000) ws.textAll(auxMsg);
         ws.textAll("{\"state\":\"true\"}");
         Serial.println("Button turned off!");
         webPower = false;

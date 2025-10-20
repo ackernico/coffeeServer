@@ -126,7 +126,18 @@ table, td, th
     border: 2px solid black;
 }
 
-table {border-collapse: collapse;}
+th
+{
+    height: 40px;
+    width: 105px;
+    position: sticky;
+}
+
+table
+{
+    border-collapse: collapse;
+    width: 100%;
+}
 
 #duration {padding: 0 15px 0 15px;}
 
@@ -137,7 +148,11 @@ table {border-collapse: collapse;}
 
 #recentTable
 {
-    padding-left: 255px;
+    padding-left: 150px;
+    overflow-y: auto;
+    max-height: 500px;
+    align-items: start;
+    height: 500px;
 }
 
 .sideIcons
