@@ -34,6 +34,7 @@ bool aux = false;
 bool started = false;
 bool buttonSustain = false;
 bool lastButton = false;
+bool isConnected = false;
 
 static int lowCount = 0;
 int offset;
@@ -44,6 +45,7 @@ long sendPower;
 long offTimer;
 long startTime = 0;
 long elapsedTime = 0;
+long connectTime = 0;
 
 /*Pins declaration*/
 const int clockWiseButton = 15;
@@ -91,7 +93,7 @@ float analogFilter(int pin, int samples, bool calibrate = false)
   } 
   else if(!calibrate)
   {
-    finalMeasure = ((((float)aux - offset) * 3.3)/(float)4095) * 10;
+    finalMeasure = ((((float)aux - offset) * 3.3)/(float)4095) * 15.15;
     return finalMeasure;
   }
 }
@@ -118,7 +120,7 @@ void setup()
   digitalWrite(ntpPin, LOW);
   digitalWrite(buzzPin, LOW);
 
-  sntp_set_time_sync_notification_cb(timeavailable);
+  sntp_set_time_sync_notification_cb(timeAvailable);
   configTime(gmtOffsetSec, 0, ntpServer);
 
   if(!LittleFS.begin(true))
@@ -128,32 +130,42 @@ void setup()
   }
 
   WiFi.begin(ssid, pass);
-  while(WiFi.status() != WL_CONNECTED)
-  {
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.println("Connected!");
-  digitalWrite(wifiPin, HIGH);
-  Serial.println(WiFi.localIP());
-
-  Serial.print("Connecting to NTP server");
-  Serial.println("Connected!");
 
   offset = analogFilter(measurePin, 1200, true);
 
   listDir();
 
   configServer();
-
-  Serial.println(readNVS("log"));
 }
 
 void loop() 
 {
-  powerButton = digitalRead(clockWiseButton);
-  if(storeTime(false) == 0) digitalWrite(ntpPin, HIGH);
+  if (timeSynced)
+  {
+    if(storeTime(false) == 0) digitalWrite(ntpPin, HIGH);
+  }
 
+  if(WiFi.status() != WL_CONNECTED)
+  {
+    if(millis() - connectTime >= 500)
+    {
+      Serial.print(".");
+      connectTime = millis();
+    }
+  }
+  else
+  {
+    if(!isConnected)
+    {
+      Serial.println("Connected to WiFi!");
+      digitalWrite(wifiPin, HIGH);
+     Serial.println(WiFi.localIP());
+      isConnected = true;
+    }
+  }
+
+  powerButton = digitalRead(clockWiseButton);
+  
   if(powerButton && !lastButton)
   {
     buttonSustain = !buttonSustain;
@@ -175,13 +187,15 @@ void loop()
       elapsedTime = millis() - startTime;
     } 
 
-    if(elapsedTime < 10000) servo.write(25);
-    else if(elapsedTime > 10000 && elapsedTime < 30000) servo.write(15);
-    else if (elapsedTime > 50000) servo.write(0);
+    if(elapsedTime < 6000) servo.write(30);
+    else if(elapsedTime > 6000 && elapsedTime < 12000) servo.write(25);
+    else if(elapsedTime > 12000 && elapsedTime < 20000) servo.write(20);
+    else if(elapsedTime > 20000 && elapsedTime < 30000) servo.write(10);
+    else if (elapsedTime > 40000) servo.write(0);
 
     if(millis() - sendPower >= 400)
     {
-      power = analogFilter(measurePin, 2500);
+      power = analogFilter(measurePin, 2700);
       String socketMsg = "{\"power\":\"" + String(power) + "\"}";
       ws.textAll(socketMsg);
       sendPower = millis();

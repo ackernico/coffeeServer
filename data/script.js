@@ -1,5 +1,5 @@
-let socket = new WebSocket("ws://192.168.0.4/ws");
-const ip = "http://192.168.0.4";
+let socket = new WebSocket("ws://192.168.0.7/ws");
+const ip = "http://192.168.0.7";
 
 const sections = document.querySelectorAll('.sections');
 const getActive = document.getElementById('active');
@@ -190,11 +190,12 @@ function loadContent(content)
                 element.innerText = "00";
             });
 
-            for(let i=0 ; i<=alarms.length ; i++)
-            {
-                if(alarms[i] != undefined)
-                {
-                    createAlarmObject(i, alarms[i].name, String(alarms[i].timeH).padStart('2', 0), String(alarms[i].timeM).padStart('2', 0), alarms[i].repeatS, alarms[i].thickness);
+            const alarmsContainer = document.getElementById('alarms');
+            if (alarmsContainer) alarmsContainer.innerHTML = '';
+
+            for (let i = 0; i < alarms.length; i++) {
+                if (alarms[i] !== undefined) {
+                    createAlarmObject(i, alarms[i].name, String(alarms[i].timeH).padStart(2, '0'), String(alarms[i].timeM).padStart(2, '0'), alarms[i].repeatS, alarms[i].thickness);
                 }
             }
             console.log(alarms);
@@ -269,29 +270,22 @@ function toggleAlarm(element)
     const alarmList = Array.from(document.querySelectorAll('#alarms .alarmObject'));
 
     const index = alarmList.indexOf(alarm);
+    if (index === -1) return;
     const hour = alarm.querySelector('.alarmHour').innerText.substring(0, 2);
     const minute = alarm.querySelector('.alarmHour').innerText.substring(3, 5);
     const alarmName = alarm.querySelector('.alarmName').innerText;
     const repeat = alarm.querySelector('.alarmRepeat').innerText;
     const thickness  = alarm.querySelector('.alarmThickness').innerText;
 
-    let repeats = []
+    if (!alarms[index]) alarms[index] = {};
+    alarms[index].status = Boolean(element.checked);
+    alarms[index].timeH = parseInt(hour);
+    alarms[index].timeM = parseInt(minute);
+    alarms[index].name = alarmName;
+    alarms[index].repeatS = repeat;
+    alarms[index].thickness = parseInt((thickness.match(/\d+/) || [0])[0]);
 
-    if(repeat == "Every weekday")
-    {
-        for(let i=1 ; i<=5 ; i++)
-        {
-            repeats[i] = true;
-        }
-        repeats[0] = false;
-        repeats[6] = false;
-    } 
-    else if(repeat == "No repeat")
-    {
-
-        thickness : parseInt(thickness.match(/\d+/g))
-    };
-    talk2ESP32("POST", "/alarms", alarms[index]);
+    talk2ESP32("POST", "/alarms", alarms).catch(err => console.error("Failed to save alarms:", err));
 }
 
 function toggleAlarmView(mode)
@@ -334,20 +328,12 @@ function createAlarmObject(idx, name, timeH, timeM, aString, thick)
         {
             edit.classList.remove('show');
         });
-
-        edit.addEventListener('click', async () =>
-        {
-            obj.remove();
-            alarms.splice(i, 1);
-            talk2ESP32("POST", "/alarms", alarms);
-        });
     });
 
-    toggleAlarm(document.querySelectorAll('.alarmObject .alarmCheckbox')[idx]);
     console.log(newAlarmObject);
 }
 
-function saveAlarm(editMode)
+async function saveAlarm(editMode)
 {
     const alarmName = document.getElementById('getName').value || "New Alarm";
     const alarmTime = [];
@@ -401,6 +387,12 @@ function saveAlarm(editMode)
     
     toggleAlarmView('r');
     console.log(alarms);
+
+        try {
+        await talk2ESP32("POST", "/alarms", alarms);
+        } catch (err) {
+        console.error("Failed to persist alarms:", err);
+        }
 }
 
 function insertRecent(duration, date, thickness, power, loadInsert = false)
