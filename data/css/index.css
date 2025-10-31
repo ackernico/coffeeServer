@@ -37,3 +37,28 @@ a, a:hover, a:visited
 {
     text-decoration: none;
 }
+
+.mainTitle
+{
+    background-color: var(--tone2);
+    color: var(--text);
+    display: flex;
+    flex-direction: row;
+}
+
+#title
+{
+    justify-content: center;
+    position: absolute;
+}
+
+#realTime
+{
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: end;
+    align-items: center;
+
+    margin-right: 30px;
+}

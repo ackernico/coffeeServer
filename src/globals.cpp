@@ -1,6 +1,7 @@
 #include "../inc/globals.h"
 
 bool webPower = false;
+bool timeSynced = false;
 std::vector<Alarm> alarms;
 std::vector<Log> grindLog;
 String storeAlarm = "[]";

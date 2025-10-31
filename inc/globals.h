@@ -12,6 +12,7 @@ struct Log;
 struct irt;
 
 extern bool webPower;
+extern bool timeSynced;
 extern std::vector<Alarm> alarms;
 extern std::vector<Log> grindLog;
 extern String storeAlarm;

@@ -20,8 +20,14 @@ int storeTime(bool printTime)
   return 0;
 }
 
-void timeavailable(struct timeval *t)
+void timeAvailable(struct timeval *t)
 {
-  Serial.println("Got time adjustment from NTP!");
-  storeTime(false);
+  struct tm timeinfo;
+  getLocalTime(&timeinfo);
+  realTime.weekDay = timeinfo.tm_wday;
+  realTime.hour = timeinfo.tm_hour;
+  realTime.minute = timeinfo.tm_min;
+  
+  timeSynced = true;
+  Serial.println("Time synced!");
 }

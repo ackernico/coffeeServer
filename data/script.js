@@ -177,7 +177,7 @@ function loadContent(content)
 
             for (let i = 0; i < grindData.length; i++) 
             {
-                insertRecent(grindData[i].duration, grindData[i].date, grindData[i].thickness, grindData[i].power);
+                insertRecent(grindData[i].duration, grindData[i].date, grindData[i].power);
                 console.log(i);
             }     
             console.log(grindData);
@@ -190,12 +190,11 @@ function loadContent(content)
                 element.innerText = "00";
             });
 
-            const alarmsContainer = document.getElementById('alarms');
-            if (alarmsContainer) alarmsContainer.innerHTML = '';
-
-            for (let i = 0; i < alarms.length; i++) {
-                if (alarms[i] !== undefined) {
-                    createAlarmObject(i, alarms[i].name, String(alarms[i].timeH).padStart(2, '0'), String(alarms[i].timeM).padStart(2, '0'), alarms[i].repeatS, alarms[i].thickness);
+            for(let i=0 ; i<=alarms.length ; i++)
+            {
+                if(alarms[i] != undefined)
+                {
+                    createAlarmObject(i, alarms[i].name, String(alarms[i].timeH).padStart('2', 0), String(alarms[i].timeM).padStart('2', 0), alarms[i].repeatS);
                 }
             }
             console.log(alarms);
@@ -210,7 +209,6 @@ function toggleStart(isFavorite)
     let startData =
     {
         "status" : null,
-        "thickness" : null
     };
 
     grindState = !grindState;
@@ -238,10 +236,6 @@ function toggleStart(isFavorite)
         timerID = null;
     }
 
-    startData.thickness = document.querySelector('#startContent .thickness').value;
-
-    if(!isFavorite) document.getElementById('measureThickness').innerText = startData.thickness + " clicks";
-    else if(isFavorite) document.getElementById('measureThickness').innerText = String(method);
     talk2ESP32("POST", "/on", startData);
 }
 
@@ -270,22 +264,23 @@ function toggleAlarm(element)
     const alarmList = Array.from(document.querySelectorAll('#alarms .alarmObject'));
 
     const index = alarmList.indexOf(alarm);
-    if (index === -1) return;
     const hour = alarm.querySelector('.alarmHour').innerText.substring(0, 2);
     const minute = alarm.querySelector('.alarmHour').innerText.substring(3, 5);
     const alarmName = alarm.querySelector('.alarmName').innerText;
     const repeat = alarm.querySelector('.alarmRepeat').innerText;
-    const thickness  = alarm.querySelector('.alarmThickness').innerText;
 
-    if (!alarms[index]) alarms[index] = {};
-    alarms[index].status = Boolean(element.checked);
-    alarms[index].timeH = parseInt(hour);
-    alarms[index].timeM = parseInt(minute);
-    alarms[index].name = alarmName;
-    alarms[index].repeatS = repeat;
-    alarms[index].thickness = parseInt((thickness.match(/\d+/) || [0])[0]);
+    let repeats = []
 
-    talk2ESP32("POST", "/alarms", alarms).catch(err => console.error("Failed to save alarms:", err));
+    if(repeat == "Every weekday")
+    {
+        for(let i=1 ; i<=5 ; i++)
+        {
+            repeats[i] = true;
+        }
+        repeats[0] = false;
+        repeats[6] = false;
+    }
+    talk2ESP32("POST", "/alarms", alarms[index]);
 }
 
 function toggleAlarmView(mode)
@@ -305,7 +300,7 @@ function toggleAlarmView(mode)
     }
 }
 
-function createAlarmObject(idx, name, timeH, timeM, aString, thick)
+function createAlarmObject(idx, name, timeH, timeM, aString)
 {
     document.getElementById('alarms').insertAdjacentHTML('beforeend', blankAlarm);
 
@@ -315,7 +310,6 @@ function createAlarmObject(idx, name, timeH, timeM, aString, thick)
     newAlarmObject.children[1].children[0].innerText = timeH + ":" + timeM;
     newAlarmObject.children[1].children[1].querySelector('.alarmCheckbox').checked = true;
     newAlarmObject.children[2].childNodes[1].innerText = aString;
-    newAlarmObject.children[2].childNodes[3].innerText = thick + " clicks";
 
     document.querySelectorAll('.alarmObjectContainer').forEach((obj, i) =>
     {
@@ -328,18 +322,25 @@ function createAlarmObject(idx, name, timeH, timeM, aString, thick)
         {
             edit.classList.remove('show');
         });
+
+        edit.addEventListener('click', async () =>
+        {
+            obj.remove();
+            alarms.splice(i, 1);
+            talk2ESP32("POST", "/alarms", alarms);
+        });
     });
 
+    toggleAlarm(document.querySelectorAll('.alarmObject .alarmCheckbox')[idx]);
     console.log(newAlarmObject);
 }
 
-async function saveAlarm(editMode)
+function saveAlarm(editMode)
 {
     const alarmName = document.getElementById('getName').value || "New Alarm";
     const alarmTime = [];
     const index = Array.from(document.querySelectorAll("#alarms .alarmObject")).length;
     const repeatInputs = document.getElementById('getRepeat');
-    const alarmThickness = document.querySelector('.thickness').value;
     
     let alarmString = "Once";
     let aux = 0;
@@ -379,7 +380,6 @@ async function saveAlarm(editMode)
         repeat: repeats,
         repeatS: alarmString,
         name : alarmName,
-        thickness : parseInt(alarmThickness.match(/\d+/g))
     };
 
     document.getElementById('getName').value = "";
@@ -387,15 +387,9 @@ async function saveAlarm(editMode)
     
     toggleAlarmView('r');
     console.log(alarms);
-
-        try {
-        await talk2ESP32("POST", "/alarms", alarms);
-        } catch (err) {
-        console.error("Failed to persist alarms:", err);
-        }
 }
 
-function insertRecent(duration, date, thickness, power, loadInsert = false)
+function insertRecent(duration, date, power, loadInsert = false)
 {
     const table = document.getElementById('recentTable').children[0];
     const rowIndex = table.children[0].childElementCount;
@@ -404,12 +398,10 @@ function insertRecent(duration, date, thickness, power, loadInsert = false)
 
     const tableDuration = row.insertCell(0);
     const tableDate = row.insertCell(1);
-    const tableThickness = row.insertCell(2);
-    const tablePower = row.insertCell(3);
+    const tablePower = row.insertCell(2);
 
     tableDuration.innerText = duration;
     tableDate.innerText = date;
-    tableThickness.innerText = thickness;
     tablePower.innerText = power;
 }
 
@@ -476,7 +468,6 @@ socket.onmessage = function(event)
 
         const dur = document.getElementById('measureTime').textContent;
         const dat = String(today.getDate() + "/" + (today.getMonth() + 1));
-        const thic = document.getElementById('measureThickness').textContent;
 
         const table = document.getElementById('recentTable').children[0];
         const index = table.children[0].childElementCount;
@@ -485,11 +476,10 @@ socket.onmessage = function(event)
         {
             duration : dur,
             date : dat,
-            thickness : thic,
             power : avgPower
         };
         grindData.push(newEntry);
-        insertRecent(newEntry.duration, newEntry.date, newEntry.thickness, newEntry.power);
+        insertRecent(newEntry.duration, newEntry.date, newEntry.power);
         talk2ESP32('POST', "/data", newEntry);
     }
 };

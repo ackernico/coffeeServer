@@ -7,7 +7,6 @@ struct Alarm {
   int timeH;
   int timeM;
   String name;
-  int thickness;
   String repeatS;
   bool repeat[7];
   bool triggered;

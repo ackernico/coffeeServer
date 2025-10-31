@@ -58,7 +58,7 @@ const int ntpPin = 25;
 const int wifiPin = 32;
 const int buzzPin = 33;
 
-void turnON(bool webButton, int thickness = 11)
+void turnON(bool webButton)
 {
   if(!webButton) turnOFF();
   else
@@ -134,13 +134,14 @@ void setup()
   offset = analogFilter(measurePin, 1200, true);
 
   listDir();
-
   configServer();
+  loadAlarms();
+  loadLogs();
 }
 
 void loop() 
 {
-  if (timeSynced)
+  if(timeSynced)
   {
     if(storeTime(false) == 0) digitalWrite(ntpPin, HIGH);
   }
@@ -163,9 +164,10 @@ void loop()
       isConnected = true;
     }
   }
-
-  powerButton = digitalRead(clockWiseButton);
   
+  powerButton = digitalRead(clockWiseButton);
+  if(storeTime(false) == 0) digitalWrite(ntpPin, HIGH);
+
   if(powerButton && !lastButton)
   {
     buttonSustain = !buttonSustain;
@@ -195,7 +197,7 @@ void loop()
 
     if(millis() - sendPower >= 400)
     {
-      power = analogFilter(measurePin, 2700);
+      power = analogFilter(measurePin, 2500);
       String socketMsg = "{\"power\":\"" + String(power) + "\"}";
       ws.textAll(socketMsg);
       sendPower = millis();
@@ -249,7 +251,7 @@ void loop()
   {
     if(!alarms[i].triggered && alarms[i].timeH == realTime.hour && alarms[i].timeM == realTime.minute && alarms[i].status)
     {
-      turnON(true, alarms[i].thickness);
+      webPower = true;
       ws.textAll("{\"state\":\"true\"}");
       alarms[i].triggered = true;
       Serial.println(alarms[i].name);

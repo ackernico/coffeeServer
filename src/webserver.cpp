@@ -5,6 +5,8 @@
 #include <string.h>
 #include <Arduino.h>
 
+#define MAX_ALARMS 100
+
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
 
@@ -56,7 +58,6 @@ void configServer()
       }
 
       const char* status = doc["status"];
-      const char* thickness = doc["thickness"];
 
       std::string sStatus = status;
 
@@ -67,7 +68,6 @@ void configServer()
       StaticJsonDocument<200> respDoc;
       respDoc["received"] = true;
       respDoc["status"] = status;
-      respDoc["thickness"] = thickness;
       serializeJson(respDoc, response);
 
       request->send(200, "application/json", response);
@@ -82,83 +82,117 @@ void configServer()
       request->send(response);
     });
 
-    server.on("/alarms", HTTP_POST, [](AsyncWebServerRequest *request) { },
-    NULL,
-    [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) {
-      String body;
-      body.reserve(len + 1);
-      for (size_t i = 0; i < len; ++i) body += (char)data[i];
+server.on("/alarms", HTTP_POST, [](AsyncWebServerRequest *request) { },
+NULL,
+[](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) {
+    String body;
+    body.reserve(len + 1);
+    for (size_t i = 0; i < len; ++i) body += (char)data[i];
 
-      DynamicJsonDocument incoming(512);
-      if (deserializeJson(incoming, body)) {
-        request->send(400, "application/json", "{\"error\":\"invalid json\"}");
-        return;
-      }
+    DynamicJsonDocument incoming(512);
+    DeserializationError errIncoming = deserializeJson(incoming, body);
+    if (errIncoming) {
+      request->send(400, "application/json", "{\"error\":\"invalid json\"}");
+      return;
+    }
 
-      int idx = incoming["index"] | -1;
-      bool status = incoming["status"] | false;
-      int timeH = incoming["timeH"] | -1;
-      int timeM = incoming["timeM"] | -1;
-      int thickness = incoming["thickness"] | -1;
-      const char* name = incoming["name"] | "";
-      String repeatS = incoming["repeatS"].as<String>();
+    int idx = incoming["index"] | -1;
+    bool status = incoming["status"] | false;
+    int timeH = incoming["timeH"] | -1;
+    int timeM = incoming["timeM"] | -1;
+    const char* name = incoming["name"] | "";
+    String repeatS = incoming["repeatS"].as<String>();
 
-      bool repeat[7] = {false, false, false, false, false, false, false};
-      if (incoming.containsKey("repeat") && incoming["repeat"].is<JsonArray>()) {
-          JsonArray repeatArr = incoming["repeat"].as<JsonArray>();
-          for (size_t i = 0; i < 7 && i < repeatArr.size(); ++i) {
-              repeat[i] = repeatArr[i].as<bool>();
-          }
-      }
+    // validate index
+    if (idx < 0 || idx >= MAX_ALARMS) {
+      request->send(400, "application/json", "{\"error\":\"invalid index\"}");
+      return;
+    }
 
-      DynamicJsonDocument doc(4096);
-      DeserializationError err2 = deserializeJson(doc, storeAlarm);
-      if (err2) {
-        doc.clear();
-        doc.to<JsonArray>();
-      }
+    bool repeat[7] = {false, false, false, false, false, false, false};
+    if (incoming.containsKey("repeat") && incoming["repeat"].is<JsonArray>()) {
+        JsonArray repeatArr = incoming["repeat"].as<JsonArray>();
+        for (size_t i = 0; i < 7 && i < repeatArr.size(); ++i) {
+            repeat[i] = repeatArr[i].as<bool>();
+        }
+    }
 
-      JsonArray arr = doc.as<JsonArray>();
+    // parse existing stored alarms safely
+    DynamicJsonDocument doc(4096);
+    DeserializationError err2 = deserializeJson(doc, storeAlarm.c_str());
+    JsonArray arr;
+    if (err2 || !doc.is<JsonArray>()) {
+      // start fresh array
+      arr = doc.to<JsonArray>();
+    } else {
+      arr = doc.as<JsonArray>();
+    }
 
-      while ((int)arr.size() <= idx) {
+    // ensure array has at least idx+1 elements, but cap growth to avoid OOM
+    while ((int)arr.size() <= idx && (int)arr.size() < MAX_ALARMS) {
         arr.createNestedObject();
-      }
+    }
 
-      JsonObject slot = arr[idx].as<JsonObject>();
-      slot["received"] = true;
-      slot["index"] = idx;
-      slot["status"] = status;
-      slot["timeH"] = timeH;
-      slot["timeM"] = timeM;
-      slot["name"] = name;
-      slot["thickness"] = thickness;
-      slot["repeatS"] = repeatS;
+    // Safety: if arr still too small (shouldn't happen because we validated idx),
+    // return error
+    if ((int)arr.size() <= idx) {
+      request->send(500, "application/json", "{\"error\":\"internal error - cannot allocate slot\"}");
+      return;
+    }
 
-      JsonArray repeatArrOut = slot.createNestedArray("repeat");
-      for (int i = 0; i < 7; i++) {
-          repeatArrOut.add(repeat[i]);
-      }
+    // assign values to slot
+    JsonObject slot = arr[idx].as<JsonObject>();
+    slot["received"] = true;
+    slot["index"] = idx;
+    slot["status"] = status;
+    slot["timeH"] = timeH;
+    slot["timeM"] = timeM;
+    slot["name"] = name;
+    slot["repeatS"] = repeatS;
 
-      Alarm newAlarm;
-      newAlarm.index = idx;
-      newAlarm.status = status;
-      newAlarm.timeH = timeH;
-      newAlarm.timeM = timeM;
-      newAlarm.thickness = thickness;
-      newAlarm.name = name;
-      newAlarm.repeatS = repeatS;
-      for(int i=0 ; i<7 ; i++) newAlarm.repeat[i] = repeat[i];
+    // replace existing repeat array cleanly
+    if (slot.containsKey("repeat")) slot.remove("repeat");
+    JsonArray repeatArrOut = slot.createNestedArray("repeat");
+    for (int i = 0; i < 7; i++) {
+        repeatArrOut.add(repeat[i]);
+    }
 
-      alarms.push_back(newAlarm);
+    bool replaced = false;
+    for (size_t i = 0; i < alarms.size(); ++i) {
+        if (alarms[i].index == idx) {
+            alarms[i].status = status;
+            alarms[i].timeH = timeH;
+            alarms[i].timeM = timeM;
+            alarms[i].name = String(name);
+            alarms[i].repeatS = repeatS;
+            for (int j = 0; j < 7; ++j) alarms[i].repeat[j] = repeat[j];
+            replaced = true;
+            break;
+        }
+    }
+    if (!replaced) {
+        Alarm newAlarm;
+        newAlarm.index = idx;
+        newAlarm.status = status;
+        newAlarm.timeH = timeH;
+        newAlarm.timeM = timeM;
+        newAlarm.name = String(name);
+        newAlarm.repeatS = repeatS;
+        for (int i = 0; i < 7; i++) newAlarm.repeat[i] = repeat[i];
+        alarms.push_back(newAlarm);
+    }
 
-      String out;
-      serializeJson(arr, out);
-      storeAlarm = out;
-      writeJson("/alarms.json", storeAlarm.c_str());
-      readJson("/alarms.json");
+    Serial.printf("[%u][NEW ALARM idx=%d]\n", (unsigned)alarms.size(), idx);
 
-      request->send(200, "application/json", storeAlarm);
-    });
+    String out;
+    serializeJson(arr, out);
+    storeAlarm = out;
+    writeJson("/alarms.json", storeAlarm.c_str());
+    writeNVS("alarms", storeAlarm.c_str());
+    readJson("/alarms.json");
+
+    request->send(200, "application/json", storeAlarm);
+});
 
     server.on("/data", HTTP_POST, [](AsyncWebServerRequest* request) {}, NULL,
     [](AsyncWebServerRequest* request, uint8_t* data, size_t len, size_t index, size_t total) {
@@ -166,26 +200,21 @@ void configServer()
       body.reserve(len + 1);
       for (size_t i = 0; i < len; ++i) body += (char)data[i];
 
-      // Desserializa apenas a entrada recebida
       DynamicJsonDocument incoming(512);
       DeserializationError err = deserializeJson(incoming, body);
       if (err) {
         request->send(400, "application/json", "{\"error\":\"invalid json\"}");
         return;
       }
-
-      // Extrai valores
       const char* date = incoming["date"] | "";
       const char* duration = incoming["duration"] | "";
       const char* power = incoming["power"] | "";
-      const char* thickness = incoming["thickness"] | "";
 
       DynamicJsonDocument slotDoc(256);
       JsonObject slot = slotDoc.to<JsonObject>();
       slot["date"] = date;
       slot["duration"] = duration;
       slot["power"] = power;
-      slot["thickness"] = thickness;
 
       DynamicJsonDocument doc(4096);
       DeserializationError err2 = deserializeJson(doc, storeLog);
@@ -202,11 +231,18 @@ void configServer()
         arr.remove(0);
       }
 
-      // Atualiza RAM e NVS
+      Log newLog;
+      newLog.duration = duration;
+      newLog.date = date;
+      newLog.power = power;
+      grindLog.push_back(newLog);
+      
       String out;
       serializeJson(arr, out);
       storeLog = out;
-      writeNVS("log", storeLog.c_str());
+
+      writeNVS("logs", storeLog.c_str());
+      Serial.println(readNVS("logs"));
 
       request->send(200, "application/json", storeLog);
     });
@@ -217,7 +253,7 @@ void configServer()
   });
 
   server.on("/data", HTTP_GET, [](AsyncWebServerRequest *request) {
-    storeLog = readNVS("log");
+    storeLog = readNVS("logs");
     request->send(200, "application/json", storeLog);
   });
 

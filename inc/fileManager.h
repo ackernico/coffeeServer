@@ -7,6 +7,8 @@ void listDir(fs::FS &fs = LittleFS, const char * dirname = "/", uint8_t levels =
 void writeJson(const char* path, const char* message, fs::FS &fs = LittleFS);
 void readJson(const char* path, fs::FS &fs = LittleFS);
 void writeNVS(const char* key, const String& json);
+void loadAlarms();
+void loadLogs();
 String readNVS(const char* key);
 void eraseNVS(const char* key);
 
