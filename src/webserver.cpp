@@ -247,6 +247,54 @@ NULL,
       request->send(200, "application/json", storeLog);
     });
 
+    server.on("/erase", HTTP_POST, [](AsyncWebServerRequest* request) {}, NULL,
+    [](AsyncWebServerRequest* request, uint8_t* data, size_t len, size_t index, size_t total) {
+      String body;
+      body.reserve(len + 1);
+      for (size_t i = 0; i < len; ++i) body += (char)data[i];
+
+      DynamicJsonDocument incoming(512);
+      DeserializationError err = deserializeJson(incoming, body);
+      if (err) {
+        request->send(400, "application/json", "{\"error\":\"invalid json\"}");
+        return;
+      }
+      const char* erase = incoming["erase"] | "";
+      const char* type = incoming["type"] | "";
+
+      DynamicJsonDocument slotDoc(256);
+      JsonObject slot = slotDoc.to<JsonObject>();
+      slot["erase"] = erase;
+      slot["type"] = type;
+      slot["received"] = true;
+
+      DynamicJsonDocument doc(4096);
+      std::string aux;
+
+      DeserializationError err2 = deserializeJson(doc, aux);
+      JsonArray arr;
+      if (err2 || !doc.is<JsonArray>()) {
+        arr = doc.to<JsonArray>();
+      } else {
+        arr = doc.as<JsonArray>();
+      }
+
+      arr.add(slot);
+
+      if (arr.size() > 100) {
+        arr.remove(0);
+      }
+
+      String out;
+      serializeJson(arr, out);
+
+      eraseNVS(type);
+
+      Serial.printf("Erased %s!\r\n", type);
+
+      request->send(200, "application/json", out);
+    });
+
   server.on("/alarms", HTTP_GET, [](AsyncWebServerRequest *request) {
     storeAlarm = readNVS("alarms");
     request->send(200, "application/json", storeAlarm);

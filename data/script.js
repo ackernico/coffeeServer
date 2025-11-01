@@ -85,6 +85,7 @@ async function loadSectionPartials()
         home: '/html/home.html',
         schedule: '/html/schedule.html',
         profiles: '/html/profiles.html',
+        info: '/html/info.html'
     };
 
     const entries = await Promise.all(
@@ -403,6 +404,14 @@ function insertRecent(duration, date, power, loadInsert = false)
     tableDuration.innerText = duration;
     tableDate.innerText = date;
     tablePower.innerText = power;
+}
+
+function eraseData(type)
+{
+    if(type == 'alarms') alarms = [];
+    else if(type == 'logs') grindData = [];
+
+    talk2ESP32('POST', "/erase", {erase:true, type: type});
 }
 
 document.addEventListener('DOMContentLoaded', async () =>
