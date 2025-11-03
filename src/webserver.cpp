@@ -1,8 +1,10 @@
+#include "esp32-hal.h"
 #include "../inc/webserver.h"
 #include "../inc/fileManager.h"
 #include "../inc/globals.h"
 
 #include <string.h>
+#include <WiFi.h>
 #include <Arduino.h>
 
 #define MAX_ALARMS 100
@@ -303,6 +305,38 @@ NULL,
   server.on("/data", HTTP_GET, [](AsyncWebServerRequest *request) {
     storeLog = readNVS("logs");
     request->send(200, "application/json", storeLog);
+  });
+
+  server.on("/info", HTTP_GET, [](AsyncWebServerRequest *request) {
+    DynamicJsonDocument slotDoc(2048);
+    JsonObject slot = slotDoc.to<JsonObject>();
+
+    float pSum = 0;
+    int gSum = 0;
+
+    for (int i = 0; i < grindLog.size(); i++) 
+    {
+      int colonIndex = grindLog[i].duration.indexOf(':');
+      int minutes = grindLog[i].duration.substring(0, colonIndex).toInt();
+      int seconds = grindLog[i].duration.substring(colonIndex + 1).toInt();
+
+      gSum += (minutes * 60) + seconds;
+      pSum += grindLog[i].power.toFloat();
+    }
+
+    slot["totalPower"] = pSum;
+    slot["totalGrindTime"] = gSum;
+    slot["averageGrindTime"] = gSum/grindLog.size();
+    slot["ssid"] = WiFi.SSID();
+    slot["ip"] = WiFi.localIP();
+    slot["mac"] = WiFi.macAddress();
+    slot["uptime"] = millis();
+    slot["signalStrength"] = WiFi.RSSI();
+
+    String out;
+    serializeJson(slot, out);
+    
+    request->send(200, "application/json", out);
   });
 
   ws.onEvent(onWebSocketEvent);

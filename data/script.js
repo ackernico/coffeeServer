@@ -18,38 +18,6 @@ let timeString;
 let timerID = null;
 
 const sectionContent = [];
-const methods = 
-{
-    melitta: `
-    <img src="../assets/melitta.png">
-    <p>Melitta</p>
-    `,
-    v60: `
-    <img src="../assets/v60.png">
-    <p>V60</p>
-    `,
-    espresso: `
-    <img class="sideIcons" src="../assets/espresso.png">
-    <p>Espresso</p>
-    `,
-    french: `
-    <img src="../assets/french.png">    
-    <p>French Press</p>
-    `,
-    moka: `
-    <img src="../assets/moka.png">
-    <p>Moka Pot</p>
-    `
-};
-
-const methodsClicks = 
-{
-    melitta : null,
-    v60 : null,
-    espresso : null,
-    french : null,
-    moka : null
-}   
 
 const blankAlarm = `
 <div class="alarmObjectContainer">
@@ -160,7 +128,6 @@ function loadContent(content)
     {
         case 'home':
             display.innerHTML = sectionContent['home'];
-            document.getElementById('favoriteMethod').innerHTML = methods[method];       
             if(grindState)
             {
                 document.getElementById('startContent').classList.remove('show');
@@ -200,12 +167,30 @@ function loadContent(content)
             }
             console.log(alarms);
             break;
+        case 'info':
+            talk2ESP32("GET", "/info").then((data) =>
+            {
+                const grindTime = data.totalGrindTime;
+                const avgTime = data.averageGrindTime;
+                
+                document.getElementById('totalPower').innerText = data.totalPower + " W";
+                document.getElementById('totalGrindTime').innerText = seconds2minutes(grindTime);
+                document.getElementById('averageGrindTime').innerText = seconds2minutes(avgTime);
+
+                document.getElementById('ssid').innerText = data.ssid;
+                document.getElementById('ip').innerText = data.ip;
+                document.getElementById('mac').innerText = data.mac;
+                document.getElementById('uptime').innerText = data.uptime;
+                document.getElementById('signalStrength').innerText = data.signalStrength;
+            });
+
+            break;
         default:
             break;
     }
 }
 
-function toggleStart(isFavorite) 
+function toggleStart() 
 {
     let startData =
     {
@@ -384,7 +369,7 @@ function saveAlarm(editMode)
     };
 
     document.getElementById('getName').value = "";
-    createAlarmObject(index, alarmName, alarmTime[0], alarmTime[1], alarmString, parseInt(alarmThickness.match(/\d+/g)));
+    createAlarmObject(index, alarmName, alarmTime[0], alarmTime[1], alarmString);
     
     toggleAlarmView('r');
     console.log(alarms);
@@ -412,6 +397,17 @@ function eraseData(type)
     else if(type == 'logs') grindData = [];
 
     talk2ESP32('POST', "/erase", {erase:true, type: type});
+}
+
+function seconds2minutes(seconds)
+{
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    const hours = Math.floor(mins / 60);
+
+    if(mins > 0) return String(mins).padStart(2, '0') + "m " + String(secs).padStart(2, '0') + "s";
+    else if(hours > 0) return String(hours).padStart(2, '0') + "h " + String(mins % 60).padStart(2, '0') + "m" + String(secs).padStart(2, '0') + "s";
+    else return String(secs).padStart(2, '0') + "s";
 }
 
 document.addEventListener('DOMContentLoaded', async () =>
@@ -492,6 +488,14 @@ socket.onmessage = function(event)
         talk2ESP32('POST', "/data", newEntry);
     }
 };
+
+setInterval(() =>
+{
+    const hour = String(new Date().getUTCHours()-3).padStart(2, '0');
+    const minutes = String(new Date().getUTCMinutes()).padStart(2, '0');
+    document.getElementById('hour').innerText = hour;
+    document.getElementById('minute').innerText = minutes;
+}, 1000);
 
 socket.onopen = () => console.log("Web - WebSocket connected!");
 socket.onclose = () => console.log("Web - WebSocket disconnected!");

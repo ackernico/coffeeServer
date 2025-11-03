@@ -112,6 +112,7 @@ String readNVS(const char* key)
 
   prefs.end();
   Serial.println("String read on non volatile!");
+  Serial.println(data);
 
   return data;
 }

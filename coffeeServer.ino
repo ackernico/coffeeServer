@@ -77,25 +77,21 @@ void turnOFF()
 float analogFilter(int pin, int samples, bool calibrate = false)
 {
   long sum = 0;
-  int aux;
-  float finalMeasure;
-
-  for(int i=0 ; i<=samples ; i++)
-  {
+  for(int i = 0; i < samples; i++)
     sum += analogRead(pin);
-  }
 
-  aux = sum/samples;
+  float avg = (float)sum / samples;
+
   if(calibrate)
   {
-    Serial.printf("Offset calibrated to %i\r\n", aux);
-    return aux;
-  } 
-  else if(!calibrate)
-  {
-    finalMeasure = ((((float)aux - offset) * 3.3)/(float)4095) * 15.15;
-    return finalMeasure;
+    Serial.printf("Offset calibrated to %.2f\r\n", avg);
+    return avg;
   }
+
+  float diff = (avg * 3.3) / 4095.0 - (offset * 3.3) / 4095.0;                        
+  float current = diff / 0.066;     
+
+  return current;
 }
 
 void setup() 
@@ -222,7 +218,7 @@ void loop()
       {
         turnOFF();
         String auxMsg = "{\"register\":\"true\",\"avgPower\":\"" + String(((float)powerSum/(float)powerSamples)/100) + "\"}";
-        if(elapsedTime >= 10000) ws.textAll(auxMsg);
+        if(elapsedTime >= 5) ws.textAll(auxMsg);
         ws.textAll("{\"state\":\"true\"}");
         Serial.println("Button turned off!");
         webPower = false;

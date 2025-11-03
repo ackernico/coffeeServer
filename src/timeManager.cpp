@@ -7,7 +7,7 @@
 int storeTime(bool printTime)
 {
   struct tm timeinfo;
-  if(!getLocalTime(&timeinfo))
+  if(!getLocalTime(&timeinfo, 0))
   {
     return -1;
   } 

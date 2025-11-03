@@ -61,11 +61,30 @@
     flex-direction: row;
     align-items: center;
     justify-content: start;
-    margin: 30px 10px 30px 10px;
 }
 .infoData > p, .eraseButton > p
 {
     font-size: 25px;
+}
+
+.infoNetwork
+{
+    font-size: 25px;
+    
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: start;
+}
+
+.infoDataESP
+{
+    font-size: 22px;
+    margin-bottom: 10px;
+    
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
 }
 
 .eraseButton
