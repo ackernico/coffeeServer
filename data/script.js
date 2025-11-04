@@ -146,8 +146,30 @@ function loadContent(content)
             for (let i = 0; i < grindData.length; i++) 
             {
                 insertRecent(grindData[i].duration, grindData[i].date, grindData[i].power);
-                console.log(i);
-            }     
+            }
+
+            let candidates = [];
+
+            if(alarms.length > 0)
+            {
+                const now = new Date();
+                const reference = now.getHours() * 60 + now.getMinutes();
+
+                for(let i=0 ; i<alarms.length ; i++)
+                {
+                    if(alarms[i].status)
+                    {
+                        candidates[i] = alarms[i].timeH * 60 + alarms[i].timeM - reference;
+                        if(candidates[i] < 0) candidates[i] = candidates[i] + 1440;
+                    }
+                }
+
+                const closestTime = Math.min(...candidates);
+                const closestIndex = candidates.indexOf(closestTime);
+                console.log(candidates);
+                console.log(closestIndex);
+                console.log(closestTime);
+            }
             console.log(grindData);
             break;
         case 'schedule':
@@ -247,6 +269,8 @@ function toggleAlarm(element)
 {
     const alarm = element.closest('.alarmObject');
 
+    element.checked = !!element.checked;
+
     const alarmList = Array.from(document.querySelectorAll('#alarms .alarmObject'));
 
     const index = alarmList.indexOf(alarm);
@@ -254,6 +278,8 @@ function toggleAlarm(element)
     const minute = alarm.querySelector('.alarmHour').innerText.substring(3, 5);
     const alarmName = alarm.querySelector('.alarmName').innerText;
     const repeat = alarm.querySelector('.alarmRepeat').innerText;
+
+    alarms[index].status = element.checked;
 
     let repeats = []
 

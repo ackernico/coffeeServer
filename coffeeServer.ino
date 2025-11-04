@@ -1,5 +1,6 @@
 #include <WiFi.h>
 #include <ESPAsyncWebServer.h>
+#include <LiquidCrystal_I2C.h>
 #include <ESP32Servo.h>
 #include <ArduinoJson.h>
 #include <LittleFS.h>
@@ -26,6 +27,7 @@ const int  daylightOffsetSec = 0;
 
 /*Variables*/
 Servo servo;
+LiquidCrystal_I2C lcd(0x27, 20, 4);
 
 String grinderState;
 
@@ -35,6 +37,9 @@ bool started = false;
 bool buttonSustain = false;
 bool lastButton = false;
 bool isConnected = false;
+bool NTPmsg = false;
+bool Wifimsg = false;
+bool ntpShownOnce = false;
 
 static int lowCount = 0;
 int offset;
@@ -46,6 +51,8 @@ long offTimer;
 long startTime = 0;
 long elapsedTime = 0;
 long connectTime = 0;
+long clearWifi = 0;
+long clearNTP = 0;
 
 /*Pins declaration*/
 const int clockWiseButton = 15;
@@ -57,6 +64,29 @@ const int measurePin = 35;
 const int ntpPin = 25;
 const int wifiPin = 32;
 const int buzzPin = 33;
+
+byte loadingBar[5][8] = {
+  {0x10,0x10,0x10,0x10,0x10,0x10,0x10,0x10},
+  {0x18,0x18,0x18,0x18,0x18,0x18,0x18,0x18},
+  {0x1C,0x1C,0x1C,0x1C,0x1C,0x1C,0x1C,0x1C},
+  {0x1E,0x1E,0x1E,0x1E,0x1E,0x1E,0x1E,0x1E},
+  {0x1F,0x1F,0x1F,0x1F,0x1F,0x1F,0x1F,0x1F}
+};
+
+byte coffeeMug[] = 
+{
+  0x0A,0x14,0x00,0x1E,0x1D,0x1D,0x1E,0x1C
+};
+
+byte clockChar[] = 
+{
+  0x0E,0x11,0x15,0x15,0x17,0x11,0x11,0x0E
+};
+
+byte wifiChar[] = 
+{
+  0x0E,0x11,0x04,0x0A,0x11,0x04,0x0E,0x04
+};
 
 void turnON(bool webButton)
 {
@@ -94,6 +124,15 @@ float analogFilter(int pin, int samples, bool calibrate = false)
   return current;
 }
 
+void initialMessage()
+{
+  lcd.clear();
+  lcd.setCursor(1,0);
+  lcd.print("CoffeeServer");
+  lcd.setCursor(14,0);
+  lcd.write(byte(6));
+}
+
 void setup() 
 {
   Serial.begin(115200);
@@ -102,6 +141,18 @@ void setup()
   servo.setPeriodHertz(50);
   servo.attach(servoPin, 1000, 2000);
   servo.write(45);
+
+  lcd.init();
+  lcd.backlight();
+  for(int i=0 ; i<5 ; i++)
+  {
+    lcd.createChar(i, loadingBar[i]);
+  }
+  lcd.createChar(6, coffeeMug);
+  lcd.createChar(7, clockChar);
+  lcd.createChar(8, wifiChar);
+
+  initialMessage();
 
   pinMode(clockWiseButton, INPUT);
   pinMode(counterClockWiseButton, INPUT);
@@ -137,9 +188,26 @@ void setup()
 
 void loop() 
 {
-  if(timeSynced)
+  if (timeSynced && !NTPmsg && !ntpShownOnce)
   {
-    if(storeTime(false) == 0) digitalWrite(ntpPin, HIGH);
+    if (storeTime(false) == 0)
+    {
+      lcd.setCursor(0, 1);
+      lcd.write(byte(7));
+      lcd.setCursor(1, 1);
+      lcd.print("NTP connected!");
+      digitalWrite(ntpPin, HIGH);
+      clearNTP = millis();
+      NTPmsg = true;
+      ntpShownOnce = true;
+    }
+  }
+
+  if (NTPmsg && millis() - clearNTP >= 2000)
+  {
+    lcd.clear();
+    initialMessage();
+    NTPmsg = false;
   }
 
   if(WiFi.status() != WL_CONNECTED)
@@ -156,9 +224,22 @@ void loop()
     {
       Serial.println("Connected to WiFi!");
       digitalWrite(wifiPin, HIGH);
-     Serial.println(WiFi.localIP());
+      Serial.println(WiFi.localIP());
+      lcd.setCursor(0, 1);
+      lcd.write(byte(8));
+      lcd.setCursor(1, 1);
+      lcd.print("WiFi connected!");
+      clearWifi = millis();
       isConnected = true;
+      Wifimsg = true;
     }
+  }
+
+  if(Wifimsg && millis() - clearWifi >= 2000)
+  {
+    lcd.clear();
+    initialMessage();
+    Wifimsg = false;
   }
   
   powerButton = digitalRead(clockWiseButton);

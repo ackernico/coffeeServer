@@ -326,7 +326,8 @@ NULL,
 
     slot["totalPower"] = pSum;
     slot["totalGrindTime"] = gSum;
-    slot["averageGrindTime"] = gSum/grindLog.size();
+    if(gSum != 0) slot["averageGrindTime"] = gSum/grindLog.size();
+    else slot["averageGrindTime"] = 0;
     slot["ssid"] = WiFi.SSID();
     slot["ip"] = WiFi.localIP();
     slot["mac"] = WiFi.macAddress();
