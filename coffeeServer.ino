@@ -31,6 +31,9 @@ LiquidCrystal_I2C lcd(0x27, 20, 4);
 
 String grinderState;
 
+enum DisplayMode { NORMAL, ADD_ALARM };
+DisplayMode currentMode = NORMAL;
+
 bool powerButton;
 bool aux = false;
 bool started = false;
@@ -40,9 +43,18 @@ bool isConnected = false;
 bool NTPmsg = false;
 bool Wifimsg = false;
 bool ntpShownOnce = false;
+bool lcdRealTime = false;
+bool buttonPressed = false;
+bool alarmMode = false;
+bool editingHour = true; 
 
 static int lowCount = 0;
 int offset;
+int lcdTime = 0;
+int lastCLKState;
+int counter = 0;
+int editHour = 0;
+int editMinute = 0;
 
 float power;
 
@@ -53,10 +65,12 @@ long elapsedTime = 0;
 long connectTime = 0;
 long clearWifi = 0;
 long clearNTP = 0;
+unsigned long lastTurnTime = 0;
+unsigned long lastButtonTime = 0;
 
 /*Pins declaration*/
 const int clockWiseButton = 15;
-const int counterClockWiseButton = 2;
+const int alarmButton = 2;
 const int clockWisePin = 13;
 const int counterClockWisePin = 12;
 const int servoPin = 18;
@@ -64,6 +78,9 @@ const int measurePin = 35;
 const int ntpPin = 25;
 const int wifiPin = 32;
 const int buzzPin = 33;
+const int clkPin = 23;
+const int dtPin = 19;
+const int swPin = 5;
 
 byte loadingBar[5][8] = {
   {0x10,0x10,0x10,0x10,0x10,0x10,0x10,0x10},
@@ -124,13 +141,64 @@ float analogFilter(int pin, int samples, bool calibrate = false)
   return current;
 }
 
-void initialMessage()
+int initialMessage(bool prinTime)
 {
   lcd.clear();
   lcd.setCursor(1,0);
   lcd.print("CoffeeServer");
   lcd.setCursor(14,0);
   lcd.write(byte(6));
+  if(prinTime)
+  {
+    lcd.setCursor(5, 1);
+    if(realTime.hour <= 9)
+    {
+      lcd.print("0");
+      lcd.setCursor(6, 1);
+    } 
+    lcd.print(realTime.hour);
+    lcd.setCursor(7, 1);
+    lcd.print(":");
+    lcd.setCursor(8, 1);
+    if(realTime.minute <= 9)
+    {
+      lcd.print("0");
+      lcd.setCursor(9, 1);
+    }
+    lcd.print(realTime.minute);
+
+    aux = realTime.minute;
+    return aux;
+  } 
+
+  return -1;
+}
+
+void updateEncoder()
+{
+  static int lastCLK = digitalRead(clkPin);
+  static int lastDT  = digitalRead(dtPin);
+
+  int currentCLK = digitalRead(clkPin);
+  int currentDT  = digitalRead(dtPin);
+
+  if (currentCLK != lastCLK && currentCLK == LOW)
+  {
+    if (currentDT != currentCLK)
+    {
+      counter++;  
+      Serial.println("CW");
+    }
+    else
+    {
+      counter--;  
+      Serial.println("CCW");
+    }    
+    Serial.printf("Encoder: %d\n", counter);
+  }
+
+  lastCLK = currentCLK;
+  lastDT  = currentDT;
 }
 
 void setup() 
@@ -152,10 +220,13 @@ void setup()
   lcd.createChar(7, clockChar);
   lcd.createChar(8, wifiChar);
 
-  initialMessage();
+  initialMessage(false);
 
   pinMode(clockWiseButton, INPUT);
-  pinMode(counterClockWiseButton, INPUT);
+  pinMode(alarmButton, INPUT);
+  pinMode(clkPin, INPUT_PULLUP);
+  pinMode(dtPin, INPUT_PULLUP);
+  pinMode(swPin, INPUT_PULLUP);
 
   pinMode(clockWisePin, OUTPUT);
   pinMode(counterClockWisePin, OUTPUT);
@@ -180,6 +251,8 @@ void setup()
 
   offset = analogFilter(measurePin, 1200, true);
 
+  lastCLKState = digitalRead(clkPin);
+
   listDir();
   configServer();
   loadAlarms();
@@ -188,26 +261,97 @@ void setup()
 
 void loop() 
 {
-  if (timeSynced && !NTPmsg && !ntpShownOnce)
+  int currentCLKState = digitalRead(clkPin);
+  int currentDTState  = digitalRead(dtPin);
+
+  if (digitalRead(alarmButton) && currentMode == NORMAL) 
   {
-    if (storeTime(false) == 0)
+    currentMode = ADD_ALARM;
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("Add new alarm:");
+    lcd.blink_on();
+    counter = 0;
+    Serial.println("Modo: Adicao de Alarme");
+    delay(200);
+  }
+
+  if (currentMode == ADD_ALARM) 
+  {
+    updateEncoder(); 
+
+    if (editingHour) 
+    {
+      editHour = constrain(counter, 0, 23);
+    } 
+    else 
+    {
+      editMinute = constrain(counter, 0, 59);
+    }
+
+    lcd.setCursor(5, 1);
+    if (editHour < 10) lcd.print("0");
+    lcd.print(editHour);
+    lcd.print(":");
+    if (editMinute < 10) lcd.print("0");
+    lcd.print(editMinute);
+
+    if (editingHour)
+      lcd.setCursor(0, 1);  
+    else
+      lcd.setCursor(3, 1);  
+
+    if (!digitalRead(swPin) && millis() - lastButtonTime > 300) 
+    {
+      lastButtonTime = millis();
+      editingHour = !editingHour;
+
+      if (!editingHour) counter = editMinute;
+      else counter = editHour;
+    }
+
+    if (digitalRead(alarmButton) && millis() - lastButtonTime > 1000) 
+    {
+      currentMode = NORMAL;
+      lcd.blink_off();
+      lcd.clear();
+      initialMessage(true);
+      delay(200);
+      Serial.println("Saiu do modo de adicao");
+    }
+    return;
+  }
+  
+  if (timeSynced)
+  {
+    if (storeTime(false) == 0) digitalWrite(ntpPin, HIGH); 
+
+    if(!ntpShownOnce)
     {
       lcd.setCursor(0, 1);
       lcd.write(byte(7));
       lcd.setCursor(1, 1);
       lcd.print("NTP connected!");
-      digitalWrite(ntpPin, HIGH);
       clearNTP = millis();
       NTPmsg = true;
       ntpShownOnce = true;
     }
   }
 
-  if (NTPmsg && millis() - clearNTP >= 2000)
+  if(lcdRealTime && timeSynced)
+  {
+    if(realTime.minute != lcdTime)
+    {
+      lcdTime = initialMessage(true);
+    }
+  }
+
+  if(NTPmsg && millis() - clearNTP >= 2000)
   {
     lcd.clear();
-    initialMessage();
+    lcdTime = initialMessage(true);
     NTPmsg = false;
+    lcdRealTime = true;
   }
 
   if(WiFi.status() != WL_CONNECTED)
@@ -225,20 +369,22 @@ void loop()
       Serial.println("Connected to WiFi!");
       digitalWrite(wifiPin, HIGH);
       Serial.println(WiFi.localIP());
-      lcd.setCursor(0, 1);
+      lcd.setCursor(0, 0);
       lcd.write(byte(8));
-      lcd.setCursor(1, 1);
+      lcd.setCursor(1, 0);
       lcd.print("WiFi connected!");
+      lcd.setCursor(2, 1);
+      lcd.print(WiFi.localIP());
       clearWifi = millis();
       isConnected = true;
       Wifimsg = true;
     }
   }
 
-  if(Wifimsg && millis() - clearWifi >= 2000)
+  if(Wifimsg && millis() - clearWifi >= 3500)
   {
     lcd.clear();
-    initialMessage();
+    initialMessage(false);
     Wifimsg = false;
   }
   
@@ -332,6 +478,12 @@ void loop()
       ws.textAll("{\"state\":\"true\"}");
       alarms[i].triggered = true;
       Serial.println(alarms[i].name);
+      lcd.setCursor(0,0);
+      lcd.write(byte(7));
+      lcd.setCursor(1, 0);
+      lcd.print("Alarm ringing!");
+      lcd.setCursor(0, 1);
+      lcd.print(alarms[i].name.c_str());
     }
 
     if(alarms[i].timeM != realTime.minute) alarms[i].triggered = false;

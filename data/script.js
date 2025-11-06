@@ -517,8 +517,10 @@ socket.onmessage = function(event)
 
 setInterval(() =>
 {
-    const hour = String(new Date().getUTCHours()-3).padStart(2, '0');
+    let hour = String(new Date().getUTCHours()-3).padStart(2, '0');
     const minutes = String(new Date().getUTCMinutes()).padStart(2, '0');
+
+    if(hour < 0) hour = String(Number(hour) + 24).padStart(2, '0');
     document.getElementById('hour').innerText = hour;
     document.getElementById('minute').innerText = minutes;
 }, 1000);
