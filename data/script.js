@@ -526,4 +526,4 @@ setInterval(() =>
 }, 1000);
 
 socket.onopen = () => console.log("Web - WebSocket connected!");
-socket.onclose = () => console.log("Web - WebSocket disconnected!");
+socket.onclose = () => console.log("Web - WebSocket disconnected!");cs
