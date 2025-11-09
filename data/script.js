@@ -52,7 +52,6 @@ async function loadSectionPartials()
     {
         home: '/html/home.html',
         schedule: '/html/schedule.html',
-        profiles: '/html/profiles.html',
         info: '/html/info.html'
     };
 
