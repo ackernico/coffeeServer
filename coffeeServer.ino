@@ -50,6 +50,7 @@ bool lcdRealTime = false;
 bool buttonPressed = false;
 bool alarmMode = false;
 bool editingHour = true;
+bool showAlarmMsg = false;
 bool isProcessing = false;
 bool startedProcessing = false;
 
@@ -75,6 +76,7 @@ long elapsedTime = 0;
 long connectTime = 0;
 long clearWifi = 0;
 long clearNTP = 0;
+long clearAlarm = 0;
 unsigned long lastTurnTime = 0;
 unsigned long lastButtonTime = 0;
 
@@ -202,6 +204,7 @@ void updateEncoder() {
       counter--;
       Serial.println("CCW");
     }
+    buzzer.sound(NOTE_C4, 50);
     Serial.printf("Encoder: %d\n", counter);
   }
 
@@ -267,7 +270,8 @@ void setup() {
   soundON();
 }
 
-void loop() {
+void loop() 
+{
   int currentCLKState = digitalRead(clkPin);
   int currentDTState = digitalRead(dtPin);
 
@@ -280,7 +284,7 @@ void loop() {
     buzzer.sound(NOTE_F7, 80);
     lcd.blink_on();
     counter = 0;
-    Serial.println("Modo: Adicao de Alarme");
+    Serial.println("Mode: Alarm editor");
     delay(200);
   }
 
@@ -323,9 +327,28 @@ void loop() {
       lcd.clear();
       initialMessage(true);
       delay(200);
-      Serial.println("Saiu do modo de adicao");
+      Serial.println("Exited alarm edit mode");
+      String socketAlarm = "{\"newAlarm\":\"true\",\"hour\":\""+String((int)editHour)+"\",\"minute\":\""+String((int)editMinute)+"\"}";
+      ws.textAll(socketAlarm);
+      initialMessage(false);
+      lcd.setCursor(0, 1);
+      lcd.print("New alarm-");
+      if(editHour <= 9) lcd.print("0");
+      lcd.print(editHour);
+      lcd.print(":");
+      if(editMinute <= 9) lcd.print("0");
+      lcd.print(editMinute);
+      clearAlarm = millis();
+      showAlarmMsg = true;
     }
     return;
+  }
+
+  if(showAlarmMsg && (millis() - clearAlarm >= 2000))
+  {
+    if(timeSynced) initialMessage(true);
+    else initialMessage(false);
+    showAlarmMsg = false;
   }
 
   if (timeSynced && !isProcessing) 
@@ -453,7 +476,7 @@ void loop() {
 
     if (millis() - sendPower >= 400) {
       power = analogFilter(measurePin, 2500);
-      String socketMsg = "{\"power\":\"" + String(power) + "\"}";
+      String socketMsg = "{\"measure\":\"true\",\"power\":\"" + String(power) + "\"}";
       ws.textAll(socketMsg);
       sendPower = millis();
 
@@ -472,7 +495,7 @@ void loop() {
       if ((millis() - offTimer >= 4500) && lowCount >= 10) {
         turnOFF();
         String auxMsg = "{\"register\":\"true\",\"avgPower\":\"" + String(((float)powerSum / (float)powerSamples) / 100) + "\"}";
-        if (elapsedTime >= 10000) ws.textAll(auxMsg);
+        if (elapsedTime >= 30000) ws.textAll(auxMsg);
         ws.textAll("{\"state\":\"true\"}");
         Serial.println("Button turned off!");
         webPower = false;

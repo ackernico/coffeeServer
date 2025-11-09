@@ -261,12 +261,10 @@ NULL,
         request->send(400, "application/json", "{\"error\":\"invalid json\"}");
         return;
       }
-      const char* erase = incoming["erase"] | "";
       const char* type = incoming["type"] | "";
 
       DynamicJsonDocument slotDoc(256);
       JsonObject slot = slotDoc.to<JsonObject>();
-      slot["erase"] = erase;
       slot["type"] = type;
       slot["received"] = true;
 

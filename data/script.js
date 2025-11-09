@@ -323,31 +323,11 @@ function createAlarmObject(idx, name, timeH, timeM, aString)
     newAlarmObject.children[1].children[1].querySelector('.alarmCheckbox').checked = true;
     newAlarmObject.children[2].childNodes[1].innerText = aString;
 
-    document.querySelectorAll('.alarmObjectContainer').forEach((obj, i) =>
-    {
-        const edit = obj.querySelector('.editMode');
-        obj.addEventListener('mouseenter', () =>
-        {
-            edit.classList.add('show');
-        });
-        obj.addEventListener('mouseleave', () =>
-        {
-            edit.classList.remove('show');
-        });
-
-        edit.addEventListener('click', async () =>
-        {
-            obj.remove();
-            alarms.splice(i, 1);
-            talk2ESP32("POST", "/alarms", alarms);
-        });
-    });
-
     toggleAlarm(document.querySelectorAll('.alarmObject .alarmCheckbox')[idx]);
     console.log(newAlarmObject);
 }
 
-function saveAlarm(editMode)
+function saveAlarm()
 {
     const alarmName = document.getElementById('getName').value || "New Alarm";
     const alarmTime = [];
@@ -422,7 +402,7 @@ function eraseData(type)
     if(type == 'alarms') alarms = [];
     else if(type == 'logs') grindData = [];
 
-    talk2ESP32('POST', "/erase", {erase:true, type: type});
+    talk2ESP32('POST', "/erase", {type: type});
 }
 
 function seconds2minutes(seconds)
@@ -488,8 +468,13 @@ socket.onmessage = function(event)
     let power = data.power;
     let registerGrind = data.register;
     let avgPower = data.avgPower;
+    let measure = data.measure;
 
-    document.getElementById('measurePower').innerText = power + " W";
+    let createNewAlarm = data.newAlarm;
+    let alarmHour = data.hour;
+    let alarmMinute = data.minute;
+
+    if(measure) document.getElementById('measurePower').innerText = power + " W";
 
     if(buttonState) document.getElementById('onoffButton').click();
 
@@ -513,6 +498,27 @@ socket.onmessage = function(event)
         insertRecent(newEntry.duration, newEntry.date, newEntry.power);
         talk2ESP32('POST', "/data", newEntry);
     }
+
+    if(createNewAlarm)
+    {
+        const newIndex = alarms.length;
+        alarms[newIndex] = 
+        {
+            index : newIndex,
+            status : true,
+            timeH : parseInt(alarmHour),
+            timeM : parseInt(alarmMinute),
+            repeat: [false, false, false, false, false, false, false],
+            repeatS: "Once",
+            name : "New Alarm"
+        }
+        console.log(alarms);
+        talk2ESP32("POST", "/alarms", alarms[newIndex]);
+
+        const alarmsContainer = document.getElementById('alarms');
+        if(alarmsContainer) createAlarmObject(newIndex, "New Alarm", String(alarmHour).padStart(2,'0'), String(alarmMinute).padStart(2,'0'), "Once");
+        else console.log("Container not found. UI will be updated soon.");
+    }
 };
 
 setInterval(() =>
@@ -526,4 +532,4 @@ setInterval(() =>
 }, 1000);
 
 socket.onopen = () => console.log("Web - WebSocket connected!");
-socket.onclose = () => console.log("Web - WebSocket disconnected!");cs
+socket.onclose = () => console.log("Web - WebSocket disconnected!");
