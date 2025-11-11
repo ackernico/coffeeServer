@@ -19,7 +19,7 @@
 
 #usageInfo
 {
-    background-color: var(--tone4);
+    background-color: var(--tone3);
     width: auto;
     padding: 20px;
     border-radius: 20px;
@@ -27,7 +27,7 @@
 
 #networkData
 {
-    background-color: var(--tone4);
+    background-color: var(--tone3);
     width: 300px;
     height: 370px;
     padding: 20px;
@@ -46,7 +46,7 @@
 #eraseData
 {
     width: 100%;
-    background-color: var(--tone4);
+    background-color: var(--tone3);
     border-radius: 20px;
     padding: 20px;
     display: flex;
@@ -92,7 +92,11 @@
     width: auto;
     padding: 10px 20px 10px 20px;
     height: 70px;
-    background-color: var(--tone2);
+    background-color: var(--tone4h5);
+}
+.eraseButton:hover
+{
+    background-color: var(--tone4);
 }
 
 .upText > h3

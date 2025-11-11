@@ -29,11 +29,11 @@
     font-size: 20px;
     gap: 10px;
 
-    background-color: var(--tone4);
+    background-color: var(--tone4h5);
 }
 #newAlarm:hover
 {
-    background-color: var(--tone3);
+    background-color: var(--tone4);
     cursor: pointer;
 }
 #newAlarm::before
@@ -89,7 +89,7 @@
     transition: all ease-in-out 150ms;
 
     transform: translateX(-50%);
-    background-color: var(--tone4);
+    background-color: var(--tone3);
 }
 #alarmEditor.show
 {
@@ -146,13 +146,10 @@
     justify-content: center;
     align-items: center;
     
-    background-color: var(--tone2);
+    background-color: var(--tone4h5);
     color: var(--text);
     transition: all ease-in-out 150ms;
-}
-.getTimeButton:hover
-{
-    background-color: var(--tone3);
+    pointer-events: none;
 }
 
 .timeArrow
@@ -195,7 +192,7 @@
 }
 .repeatButtons:checked
 {
-    background-color: var(--tone3);
+    background-color: var(--tone4);
 }
 .repeatButtons::before
 {
@@ -216,7 +213,14 @@
 
     text-align: center;
     font-weight: bold;
+    transition: all ease-in-out 150ms;
 }
+#getName:focus
+{
+    background-color: var(--tone4h5);
+    outline: none;
+}
+
 #changeLabel:focus
 {
     outline: none;
@@ -233,14 +237,14 @@
     font-weight: bold;
     text-align: center;
 
-    background-color: var(--tone2);
+    background-color: var(--tone4h5);
     color: var(--text);
     transition: all ease-in-out 150ms;
 }
 #saveAlarm:hover
 {
     cursor: pointer;
-    background-color: var(--tone3);
+    background-color: var(--tone4);
 }
 
 .alarmObjectContainer
@@ -294,7 +298,13 @@
     width: 80%;
     border-radius: 25px;
 
+    background-color: var(--tone4h5);
+    transition: all ease-in-out 150ms;
+}
+.alarmObject:hover
+{
     background-color: var(--tone4);
+    cursor: pointer;
 }
 .alarmObject > p
 {

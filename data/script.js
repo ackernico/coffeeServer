@@ -16,6 +16,9 @@ let min = 0;
 let secs = 0;
 let timeString;
 let timerID = null;
+let currentScreen = 'home';
+let nextAlarmWatcherStarted = false;
+let lastAlarmCheckMinute = null;
 
 const sectionContent = [];
 
@@ -46,9 +49,8 @@ const blankAlarm = `
 
 const method = 'moka';
 
-async function loadSectionPartials()
-{
-    const files = 
+async function loadSectionPartials() {
+    const files =
     {
         home: '/html/home.html',
         schedule: '/html/schedule.html',
@@ -56,46 +58,43 @@ async function loadSectionPartials()
     };
 
     const entries = await Promise.all(
-      Object.entries(files).map(async ([key, url]) => {
-        const res = await fetch(url);
-        if (!res.ok) throw new Error(`Failed to load ${url}: ${res.status}`);
-        const html = await res.text();
-        return [key, html];
-      })
+        Object.entries(files).map(async ([key, url]) => {
+            const res = await fetch(url);
+            if (!res.ok) throw new Error(`Failed to load ${url}: ${res.status}`);
+            const html = await res.text();
+            return [key, html];
+        })
     );
 
     entries.forEach(([k, html]) => sectionContent[k] = html);
 }
 
-function adjustTime(arrow, timeReset, order)
-{
+function adjustTime(arrow, timeReset, order) {
     let timeElement = arrow.closest(".getTimeContainer").children[1];
     let time = Number(timeElement.innerText);
     let reset;
-    
-    if(timeReset == 'h') reset = 23;
-    else if(timeReset == 'm') reset = 59;
 
-    if(order == 's') time = time + 1;
-    else if(order == 'm') time = time - 1;
-    if(time > reset) time = 0;
-    if(time < 0) time = reset;
+    if (timeReset == 'h') reset = 23;
+    else if (timeReset == 'm') reset = 59;
+
+    if (order == 's') time = time + 1;
+    else if (order == 'm') time = time - 1;
+    if (time > reset) time = 0;
+    if (time < 0) time = reset;
 
     timeElement.innerText = String(time).padStart(2, '0');
 }
 
-async function talk2ESP32(method, route, jsonData)
-{
+async function talk2ESP32(method, route, jsonData) {
     const address = ip + route;
 
-    const labels = 
+    const labels =
     {
-        method : method.toUpperCase(),
-        headers : {"Content-Type" : "application/json"},
+        method: method.toUpperCase(),
+        headers: { "Content-Type": "application/json" },
     }
 
-    if(labels.method !== "GET" && labels.method !== "HEAD" && jsonData !== undefined)
-    {
+    if (labels.method !== "GET" && labels.method !== "HEAD" && jsonData !== undefined) {
         labels.body = JSON.stringify(jsonData);
     }
 
@@ -121,79 +120,111 @@ async function talk2ESP32(method, route, jsonData)
     }
 }
 
-function loadContent(content)
-{
-    switch(content)
-    {
+function loadContent(content) {
+    switch (content) {
         case 'home':
+            currentScreen = 'home';
             display.innerHTML = sectionContent['home'];
-            if(grindState)
-            {
+            if (grindState) {
                 document.getElementById('startContent').classList.remove('show');
                 document.getElementById('grindMeasurements').classList.add('show');
                 document.getElementById('measurementLabel').classList.add('show');
-                document.getElementById('buttonLabel').innerText = "OFF";
+                document.getElementById('pwrButton').innerText = "OFF";
             }
-            else
-            {
+            else {
                 document.getElementById('startContent').classList.add('show');
                 document.getElementById('grindMeasurements').classList.remove('show');
                 document.getElementById('measurementLabel').classList.remove('show');
-                document.getElementById('buttonLabel').innerText = "ON";
+                document.getElementById('pwrButton').innerText = "ON";
             }
 
-            for (let i = 0; i < grindData.length; i++) 
-            {
+            for (let i = 0; i < grindData.length; i++) {
                 insertRecent(grindData[i].duration, grindData[i].date, grindData[i].power);
             }
-
-            let candidates = [];
-
-            if(alarms.length > 0)
-            {
-                const now = new Date();
-                const reference = now.getHours() * 60 + now.getMinutes();
-
-                for(let i=0 ; i<alarms.length ; i++)
-                {
-                    if(alarms[i].status)
-                    {
-                        candidates[i] = alarms[i].timeH * 60 + alarms[i].timeM - reference;
-                        if(candidates[i] < 0) candidates[i] = candidates[i] + 1440;
-                    }
+            function computeAndShowNextAlarm() {
+                if (!Array.isArray(alarms) || alarms.length === 0) {
+                    const nName = document.getElementById('nextAlarmName');
+                    const nTime = document.getElementById('nextAlarmTime');
+                    const nRem = document.getElementById('nextAlarmRemains');
+                    if (nName) nName.innerText = "—";
+                    if (nTime) nTime.innerText = "—:—";
+                    if (nRem) nRem.innerText = "";
+                    return;
                 }
 
-                const closestTime = Math.min(...candidates);
-                const closestIndex = candidates.indexOf(closestTime);
-                console.log(candidates);
-                console.log(closestIndex);
-                console.log(closestTime);
+                const now = new Date();
+                const reference = now.getHours() * 60 + now.getMinutes();
+                const candidates = [];
+                for (let i = 0; i < alarms.length; i++) {
+                    const a = alarms[i];
+                    if (!a || !a.status) {
+                        candidates.push({ index: i, diff: Infinity });
+                        continue;
+                    }
+                    const alarmMinutes = Number(a.timeH) * 60 + Number(a.timeM);
+                    let diff = alarmMinutes - reference;
+                    if (diff < 0) diff += 1440;
+                    candidates.push({ index: i, diff });
+                }
+
+                candidates.sort((a, b) => a.diff - b.diff);
+                const next = candidates[0];
+                if (!next || !isFinite(next.diff)) return;
+
+                const a = alarms[next.index];
+                const nameEl = document.getElementById('nextAlarmName');
+                const timeEl = document.getElementById('nextAlarmTime');
+                const remEl = document.getElementById('nextAlarmRemains');
+                if (nameEl) nameEl.innerText = a.name || "Alarm";
+                if (timeEl) timeEl.innerText = String(Number(a.timeH)).padStart(2, '0') + ":" + String(Number(a.timeM)).padStart(2, '0');
+
+                let remHours = Math.floor(next.diff / 60);
+                let remMinutes = next.diff % 60;
+                let remainsString = "";
+                if (remHours > 0) remainsString = String(remHours) + "h ";
+                remainsString += String(remMinutes).padStart(2, '0') + "m remaining";
+                if (remEl) remEl.innerText = remainsString;
+            }
+
+            if (!nextAlarmWatcherStarted) {
+                nextAlarmWatcherStarted = true;
+                lastAlarmCheckMinute = new Date().getMinutes();
+                computeAndShowNextAlarm();
+                setInterval(() => {
+                    const now = new Date();
+                    const m = now.getMinutes();
+                    if (m !== lastAlarmCheckMinute) {
+                        lastAlarmCheckMinute = m;
+                        computeAndShowNextAlarm();
+                    }
+                }, 1000);
+            } else {
+                computeAndShowNextAlarm();
             }
             console.log(grindData);
             break;
         case 'schedule':
-            const checkbox = document.querySelectorAll('.alarmObject .alarmCheckbox');   
+            currentScreen = 'schedule';
+            const checkbox = document.querySelectorAll('.alarmObject .alarmCheckbox');
 
-            document.getElementById('getTime').querySelectorAll('.getTimeButton').forEach((element) =>
-            {
+            document.getElementById('getTime').querySelectorAll('.getTimeButton').forEach((element) => {
                 element.innerText = "00";
             });
 
-            for(let i=0 ; i<=alarms.length ; i++)
-            {
-                if(alarms[i] != undefined)
-                {
-                    createAlarmObject(i, alarms[i].name, String(alarms[i].timeH).padStart('2', 0), String(alarms[i].timeM).padStart('2', 0), alarms[i].repeatS);
+            for (let i = 0; i <= alarms.length; i++) {
+                if (alarms[i] != undefined) {
+                    if (alarms[i].status) createAlarmObject(i, alarms[i].name, String(alarms[i].timeH).padStart('2', 0), String(alarms[i].timeM).padStart('2', 0), alarms[i].repeatS);
+                    else createAlarmObject(i, alarms[i].name, String(alarms[i].timeH).padStart('2', 0), String(alarms[i].timeM).padStart('2', 0), alarms[i].repeatS, false);
                 }
             }
             console.log(alarms);
             break;
         case 'info':
-            talk2ESP32("GET", "/info").then((data) =>
-            {
+            currentScreen = 'info';
+            talk2ESP32("GET", "/info").then((data) => {
                 const grindTime = data.totalGrindTime;
                 const avgTime = data.averageGrindTime;
-                
+
                 document.getElementById('totalPower').innerText = data.totalPower + " W";
                 document.getElementById('totalGrindTime').innerText = seconds2minutes(grindTime);
                 document.getElementById('averageGrindTime').innerText = seconds2minutes(avgTime);
@@ -204,25 +235,22 @@ function loadContent(content)
                 document.getElementById('uptime').innerText = data.uptime;
                 document.getElementById('signalStrength').innerText = data.signalStrength;
             });
-
             break;
         default:
             break;
     }
 }
 
-function toggleStart() 
-{
+function toggleStart() {
     let startData =
     {
-        "status" : null,
+        "status": null,
     };
 
     grindState = !grindState;
     timer = grindState;
 
-    if(grindState)
-    {
+    if (grindState) {
         startData.status = "on";
         secs = -1;
         min = 0;
@@ -230,15 +258,14 @@ function toggleStart()
         document.getElementById('startContent').classList.remove('show');
         document.getElementById('grindMeasurements').classList.add('show');
         document.getElementById('measurementLabel').classList.add('show');
-        document.getElementById('buttonLabel').innerText = "OFF";
+        document.getElementById('pwrButton').innerText = "OFF";
     }
-    else
-    {
+    else {
         startData.status = "off";
         document.getElementById('startContent').classList.add('show');
         document.getElementById('grindMeasurements').classList.remove('show');
         document.getElementById('measurementLabel').classList.remove('show');
-        document.getElementById('buttonLabel').innerText = "ON";
+        document.getElementById('pwrButton').innerText = "ON";
         clearTimeout(timerID);
         timerID = null;
     }
@@ -246,14 +273,11 @@ function toggleStart()
     talk2ESP32("POST", "/on", startData);
 }
 
-function grindTimer()
-{
+function grindTimer() {
     timerID = setTimeout(grindTimer, 1000);
-    if(timer)
-    {
+    if (timer) {
         secs++;
-        if(secs >= 60)
-        {
+        if (secs >= 60) {
             secs = 0;
             min++;
         }
@@ -264,8 +288,7 @@ function grindTimer()
     document.getElementById('measureTime').innerText = timeString;
 }
 
-function toggleAlarm(element)
-{
+function toggleAlarm(element) {
     const alarm = element.closest('.alarmObject');
 
     element.checked = !!element.checked;
@@ -282,106 +305,95 @@ function toggleAlarm(element)
 
     let repeats = []
 
-    if(repeat == "Every weekday")
-    {
-        for(let i=1 ; i<=5 ; i++)
-        {
+    if (repeat == "Every weekday") {
+        for (let i = 1; i <= 5; i++) {
             repeats[i] = true;
         }
         repeats[0] = false;
         repeats[6] = false;
     }
     talk2ESP32("POST", "/alarms", alarms[index]);
+    console.log(alarms);
 }
 
-function toggleAlarmView(mode)
-{
+function toggleAlarmView(mode) {
     let editor = document.getElementById('alarmEditor');
     let alarmsEl = document.getElementById('alarms');
 
-    if(mode == 's')
-    {
+    if (mode == 's') {
         editor.classList.add('show');
         alarmsEl.classList.add('show');
     }
-    else if(mode == 'r')
-    {
+    else if (mode == 'r') {
         editor.classList.remove('show');
         alarmsEl.classList.remove('show');
     }
 }
 
-function createAlarmObject(idx, name, timeH, timeM, aString)
-{
+function createAlarmObject(idx, name, timeH, timeM, aString, status = true) {
     document.getElementById('alarms').insertAdjacentHTML('beforeend', blankAlarm);
 
     const newAlarmObject = document.querySelectorAll('.alarmObject')[idx];
 
     newAlarmObject.children[0].innerText = name;
     newAlarmObject.children[1].children[0].innerText = timeH + ":" + timeM;
-    newAlarmObject.children[1].children[1].querySelector('.alarmCheckbox').checked = true;
+    newAlarmObject.children[1].children[1].querySelector('.alarmCheckbox').checked = status;
     newAlarmObject.children[2].childNodes[1].innerText = aString;
 
     toggleAlarm(document.querySelectorAll('.alarmObject .alarmCheckbox')[idx]);
     console.log(newAlarmObject);
 }
 
-function saveAlarm()
-{
+function saveAlarm() {
     const alarmName = document.getElementById('getName').value || "New Alarm";
     const alarmTime = [];
     const index = Array.from(document.querySelectorAll("#alarms .alarmObject")).length;
     const repeatInputs = document.getElementById('getRepeat');
-    
+
     let alarmString = "Once";
     let aux = 0;
     let repeats = [];
 
-    document.querySelectorAll('.getTimeContainer').forEach((element, i) =>
-    {
+    document.querySelectorAll('.getTimeContainer').forEach((element, i) => {
         alarmTime[i] = element.children[1].innerText;
     });
 
-    Array.from(repeatInputs.children).forEach((element, i) =>
-    {
-        if(element.checked)
-        {
+    Array.from(repeatInputs.children).forEach((element, i) => {
+        if (element.checked) {
             repeats[i] = true;
-            if(aux === 0)
-            {
+            if (aux === 0) {
                 alarmString = "Every ";
                 alarmString = alarmString + element.value;
             }
             else alarmString = alarmString + ", " + element.value;
             aux++;
-        } 
+        }
         else repeats[i] = false;
-        if(aux === 6) alarmString = "Every day";
+        if (aux === 6) alarmString = "Every day";
     });
 
-    if(alarmString === "Every Monday, Tuesday, Wednesday, Thursday, Friday") alarmString = "Every weekday";
-    else if(alarmString === "Every Sunday, Saturday") alarmString = "Every weekend";
+    if (alarmString === "Every Monday, Tuesday, Wednesday, Thursday, Friday") alarmString = "Every weekday";
+    else if (alarmString === "Every Sunday, Saturday") alarmString = "Every weekend";
 
-    alarms[index] = 
+    alarms[index] =
     {
-        index : index,
-        status : true,
-        timeH : parseInt(alarmTime[0]),
-        timeM : parseInt(alarmTime[1]),
+        index: index,
+        status: true,
+        timeH: parseInt(alarmTime[0]),
+        timeM: parseInt(alarmTime[1]),
         repeat: repeats,
         repeatS: alarmString,
-        name : alarmName,
+        name: alarmName,
     };
 
     document.getElementById('getName').value = "";
     createAlarmObject(index, alarmName, alarmTime[0], alarmTime[1], alarmString);
-    
+
     toggleAlarmView('r');
     console.log(alarms);
 }
 
-function insertRecent(duration, date, power, loadInsert = false)
-{
+function insertRecent(duration, date, power, loadInsert = false) {
     const table = document.getElementById('recentTable').children[0];
     const rowIndex = table.children[0].childElementCount;
 
@@ -396,45 +408,38 @@ function insertRecent(duration, date, power, loadInsert = false)
     tablePower.innerText = power;
 }
 
-function eraseData(type)
-{
-    if(type == 'alarms') alarms = [];
-    else if(type == 'logs') grindData = [];
+function eraseData(type) {
+    if (type == 'alarms') alarms = [];
+    else if (type == 'logs') grindData = [];
 
-    talk2ESP32('POST', "/erase", {type: type});
+    talk2ESP32('POST', "/erase", { type: type });
 }
 
-function seconds2minutes(seconds)
-{
+function seconds2minutes(seconds) {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     const hours = Math.floor(mins / 60);
 
-    if(mins > 0) return String(mins).padStart(2, '0') + "m " + String(secs).padStart(2, '0') + "s";
-    else if(hours > 0) return String(hours).padStart(2, '0') + "h " + String(mins % 60).padStart(2, '0') + "m" + String(secs).padStart(2, '0') + "s";
+    if (mins > 0) return String(mins).padStart(2, '0') + "m " + String(secs).padStart(2, '0') + "s";
+    else if (hours > 0) return String(hours).padStart(2, '0') + "h " + String(mins % 60).padStart(2, '0') + "m" + String(secs).padStart(2, '0') + "s";
     else return String(secs).padStart(2, '0') + "s";
 }
 
-document.addEventListener('DOMContentLoaded', async () =>
-{
-    try
-    {
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
         await loadSectionPartials();
     }
-    catch(err)
-    {
+    catch (err) {
         console.log("Error while loading partials: ", err);
     }
-    
-    try
-    {
+
+    try {
         const data1 = await talk2ESP32("GET", "/alarms");
         const data2 = await talk2ESP32("GET", "/data");
-        if(Array.isArray(data1)) alarms = data1;
-        if(Array.isArray(data2)) grindData = data2;
+        if (Array.isArray(data1)) alarms = data1;
+        if (Array.isArray(data2)) grindData = data2;
     }
-    catch(err)
-    {
+    catch (err) {
         console.log("Failed to load alarms", err);
     }
 
@@ -444,15 +449,30 @@ document.addEventListener('DOMContentLoaded', async () =>
     loadContent('home');
 });
 
-sections.forEach(sec =>
-{
-    sec.addEventListener('click', () => 
-    {
+sections.forEach(sec => {
+    sec.addEventListener('click', () => {
         display.classList.remove('show');
         sections.forEach(j => j.classList.remove('active'));
         sec.classList.add('active');
-        setTimeout(() => 
-        {
+        setTimeout(() => {
+            switch(sec.id)
+            {
+                case 'home': 
+                    document.body.classList.add('moveHome');
+                    document.body.classList.remove('moveSchedule');
+                    document.body.classList.remove('moveInfo');
+                    break;
+                case 'schedule': 
+                    document.body.classList.remove('moveHome');
+                    document.body.classList.add('moveSchedule');
+                    document.body.classList.remove('moveInfo');
+                    break;
+                case 'info': 
+                    document.body.classList.remove('moveHome');
+                    document.body.classList.remove('moveSchedule');
+                    document.body.classList.add('moveInfo');
+                    break;
+            }
             display.classList.add('show');
             display.innerHTML = sectionContent[sec.id];
             loadContent(sec.id);
@@ -460,8 +480,7 @@ sections.forEach(sec =>
     });
 });
 
-socket.onmessage = function(event)
-{
+socket.onmessage = function (event) {
     let data = JSON.parse(event.data);
     let buttonState = data.state;
     let power = data.power;
@@ -473,12 +492,11 @@ socket.onmessage = function(event)
     let alarmHour = data.hour;
     let alarmMinute = data.minute;
 
-    if(measure) document.getElementById('measurePower').innerText = power + " W";
+    if (measure) document.getElementById('measurePower').innerText = power + " W";
 
-    if(buttonState) document.getElementById('onoffButton').click();
+    if (buttonState) document.getElementById('onoffButton').click();
 
-    if(registerGrind)
-    {
+    if (registerGrind) {
         const today = new Date();
 
         const dur = document.getElementById('measureTime').textContent;
@@ -487,45 +505,43 @@ socket.onmessage = function(event)
         const table = document.getElementById('recentTable').children[0];
         const index = table.children[0].childElementCount;
 
-        const newEntry = 
+        const newEntry =
         {
-            duration : dur,
-            date : dat,
-            power : avgPower
+            duration: dur,
+            date: dat,
+            power: avgPower
         };
         grindData.push(newEntry);
         insertRecent(newEntry.duration, newEntry.date, newEntry.power);
         talk2ESP32('POST', "/data", newEntry);
     }
 
-    if(createNewAlarm)
-    {
+    if (createNewAlarm) {
         const newIndex = alarms.length;
-        alarms[newIndex] = 
+        alarms[newIndex] =
         {
-            index : newIndex,
-            status : true,
-            timeH : parseInt(alarmHour),
-            timeM : parseInt(alarmMinute),
+            index: newIndex,
+            status: true,
+            timeH: parseInt(alarmHour),
+            timeM: parseInt(alarmMinute),
             repeat: [false, false, false, false, false, false, false],
             repeatS: "Once",
-            name : "New Alarm"
+            name: "New Alarm"
         }
         console.log(alarms);
         talk2ESP32("POST", "/alarms", alarms[newIndex]);
 
         const alarmsContainer = document.getElementById('alarms');
-        if(alarmsContainer) createAlarmObject(newIndex, "New Alarm", String(alarmHour).padStart(2,'0'), String(alarmMinute).padStart(2,'0'), "Once");
+        if (alarmsContainer) createAlarmObject(newIndex, "New Alarm", String(alarmHour).padStart(2, '0'), String(alarmMinute).padStart(2, '0'), "Once");
         else console.log("Container not found. UI will be updated soon.");
     }
 };
 
-setInterval(() =>
-{
-    let hour = String(new Date().getUTCHours()-3).padStart(2, '0');
+setInterval(() => {
+    let hour = String(new Date().getUTCHours() - 3).padStart(2, '0');
     const minutes = String(new Date().getUTCMinutes()).padStart(2, '0');
 
-    if(hour < 0) hour = String(Number(hour) + 24).padStart(2, '0');
+    if (hour < 0) hour = String(Number(hour) + 24).padStart(2, '0');
     document.getElementById('hour').innerText = hour;
     document.getElementById('minute').innerText = minutes;
 }, 1000);

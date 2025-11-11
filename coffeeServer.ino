@@ -127,9 +127,11 @@ void successSound()
   buzzer.sound(NOTE_F5, 90);
 }
 
-void turnON(bool webButton) {
+void turnON(bool webButton) 
+{
   if (!webButton) turnOFF();
-  else {
+  else 
+  {
     digitalWrite(clockWisePin, HIGH);
     isProcessing = true;
   }
@@ -397,12 +399,10 @@ void loop()
           a.triggered = true;
           Serial.printf("[ALARM] TRIGGER idx=%u name=\"%s\"\n", (unsigned)i, a.name.c_str());
           lcd.clear();
-          lcd.setCursor(0, 0);
-          lcd.write(byte(7));
-          lcd.setCursor(1, 0);
-          lcd.print("Alarm ringing!");
           lcd.setCursor(0, 1);
-          lcd.print(a.name.c_str());
+          lcd.write(byte(7));
+          lcd.setCursor(1, 1);
+          lcd.print("Alarm ringing!");
         }
       }
     }

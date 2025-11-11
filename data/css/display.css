@@ -86,12 +86,12 @@ main #sideContainer
 }
 .sections:hover
 {   
-    background-color: var(--tone3);
+    background-color: var(--tone4h5);
     cursor: pointer;
 }
 
 .active
 {
-    background-color: var(--tone4);
+    background-color: var(--tone4h5);
     color: var(--text);
 }

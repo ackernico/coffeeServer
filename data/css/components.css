@@ -31,45 +31,6 @@
     cursor: pointer;
 }
 
-.thickness
-{
-    -webkit-appearance: none;
-    appearance: none;
-
-    background-color: var(--tone4);
-    
-    width: 253px;
-    border-radius: 20px;
-    margin: 0 0 10px 0;
-    border: 3px solid var(--tone3);
-    
-    background: linear-gradient(
-        to right, 
-        var(--tone4) 10px, 
-        var(--tone3) 11px
-    );
-    background-size: 11px 100%;
-}
-.thickness:hover
-{
-    cursor: pointer;
-}
-.thickness::-moz-range-thumb
-{
-    background: var(--tone2);
-    width: 11px;
-    height: 20px;
-    border: none;
-}
-.thickness::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    background: var(--tone2);
-    width: 11px;
-    height: 20px;
-    border: none;
-    margin-top: -3px;
-}
-
 .switch
 {
     display: flex;

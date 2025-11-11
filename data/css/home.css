@@ -20,14 +20,25 @@
 {
     width: 250px;
     height: 100px;
+    position: relative;
+    z-index: 2;
+    align-items: center;
+    justify-content: center;
 
-    background-color: var(--tone4);
+    background-color: var(--tone4h5);
+    z-index: 10;
+    overflow: hidden;
+    border: none;
 }
 
 #powerButton
 {
     text-align: center;
     transition: all ease-in-out 150ms;
+}
+#powerButton:hover .buttonShape
+{
+    opacity: 0.2;
 }
 
 #powerSection > p
@@ -79,7 +90,7 @@ label, .textLabels
     pointer-events: none;
 
     gap: 20px;
-    height: 50%;
+    height: 40%;
     width: 10%;
     font-size: 30px;
     border-radius: 20px;
@@ -93,7 +104,7 @@ label, .textLabels
 #grindMeasurements.show
 {
     opacity: 1;
-    width: 60%;
+    width: 50%;
     transform: translateY(0);
     pointer-events: initial;
     position: relative;
@@ -104,7 +115,7 @@ label, .textLabels
     display: flex;
     flex-direction: row;
     align-items: center;
-    padding-left: 30%;
+    padding-left: 29%;
 }
 
 #measurementLabel
@@ -155,9 +166,97 @@ table
     height: 500px;
 }
 
+.activeButton {background-color: var(--tone3);}
+.activeButton > .buttonShape{opacity: 0.3;}
+
 .sideIcons
 {
     margin: 0 10px 0 0;
     width: 32px;
     height: 32px;
+}
+
+.buttonLabel
+{
+    position: relative;
+    z-index: 10;
+}
+
+#buttonContainer
+{
+    overflow: hidden;
+    display: inline-block;
+    position: relative;
+}
+
+.buttonShape
+{
+    display: flex;
+    flex-direction: row;
+    width: 130px;
+    height: 130px;
+    border-radius: 75%;
+    gap: 20px;
+    position: absolute;
+    z-index: 2;
+    pointer-events: none;
+    filter: blur(18px);
+    opacity: 0.5;
+
+    transition: all ease-in-out 150ms;
+}
+
+#shape1
+{
+    background-color: var(--buttonColor1);
+    transform: translate(-90px, -40px);
+    animation: shape1 10s linear infinite;
+}
+#shape2
+{
+    background-color: var(--buttonColor2);
+    transform: translate(-60px, 40px);
+    animation: shape2 10s linear infinite;
+}
+#shape3
+{
+    background-color: var(--buttonColor3);
+    transform: translate(60px, -40px);
+    animation: shape3 10s linear infinite;
+
+}
+#shape4
+{
+    background-color: var(--buttonColor4);
+    transform: translate(70px, 40px);
+    animation: shape4 10s linear infinite;
+}
+
+@keyframes shape1
+{
+    0%  { transform: translate(-90px, -40px);} /*1*/
+    25% { transform: translate(50px, -40px);}  /*3*/
+    50% { transform: translate(90px, 40px);}   /*4*/
+    75% { transform: translate(-30px, 40px);}  /*2*/
+}
+@keyframes shape2
+{
+    0%  { transform: translate(-30px, 40px);} 
+    25% { transform: translate(-90px, -40px);} 
+    50% { transform: translate(50px, -40px);}  
+    75% { transform: translate(90px, 40px);}
+}
+@keyframes shape3
+{
+    0%  { transform: translate(50px, -40px);} 
+    25% { transform: translate(90px, 40px);}  
+    50% { transform: translate(-30px, 40px);} 
+    75% { transform: translate(-90px, -40px);}
+}
+@keyframes shape4
+{
+    0%  { transform: translate(90px, 40px);}  
+    25% { transform: translate(-30px, 40px);} 
+    50% { transform: translate(-90px, -40px);} 
+    75% { transform: translate(50px, -40px);}
 }

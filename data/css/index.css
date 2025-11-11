@@ -17,20 +17,60 @@
 
 :root
 {
-    --tone1: #ECDFCC;
-    --tone2: #3C3D37;
-    --tone3: #181C14;
-    --tone4: #697565;
-    --text: #f0ebe8;
+    --tone1: #090A0A;      /* Fundo carbon black */
+    --tone2: #0F1414;      /* Cards */
+    --tone3: #181D1D;      /* Bordas */
+    --tone4: #16A34A;      /* Verde musgo moderno */
+    --tone4h5: #0f4f27;   /* Verde musgo escuro */
+    --text:   #ECECEC;     /* Cinza claro elegante */
+
+    --buttonColor1: #1ECB67;  /* Verde mais claro, tom de entrada */
+    --buttonColor2: #16A34A;  /* Cor principal do highlight */
+    --buttonColor3: #29D977;  /* Acento mais vibrante, contraste */
+    --buttonColor4: #1ECB67;  /* Fecha o gradiente suave */
 }
 
 body
 {
     font-family: "test";
     background-color: var(--tone1);
+    position: relative;
+    overflow-x: hidden;
     display : flex;
     flex-direction: column;
     min-height: 100vh;
+
+    transition: background-position 0.4s ease;
+}
+
+body.moveHome::before 
+{
+    background-position: 35px 1545px; 
+}
+body.moveSchedule::before 
+{
+    background-position: 35px 825px;
+}
+body.moveInfo::before 
+{
+    background-position: 35px 105px;
+}
+
+body::before 
+{
+    content: "";
+    position: fixed;
+    inset: 0;
+
+    background-image: url(../assets/fundobranco.png);
+    background-repeat: repeat;
+    background-position: 35px 105px;
+    opacity: 0.08;          /* deixa o padrão MUITO sutil */
+
+    filter: blur(1.5px);    /* tira o ruído */
+    z-index: -1;
+
+    transition: background-position 0.4s ease;
 }
 
 a, a:hover, a:visited
