@@ -309,23 +309,6 @@ NULL,
     DynamicJsonDocument slotDoc(2048);
     JsonObject slot = slotDoc.to<JsonObject>();
 
-    float pSum = 0;
-    int gSum = 0;
-
-    for (int i = 0; i < grindLog.size(); i++) 
-    {
-      int colonIndex = grindLog[i].duration.indexOf(':');
-      int minutes = grindLog[i].duration.substring(0, colonIndex).toInt();
-      int seconds = grindLog[i].duration.substring(colonIndex + 1).toInt();
-
-      gSum += (minutes * 60) + seconds;
-      pSum += grindLog[i].power.toFloat();
-    }
-
-    slot["totalPower"] = pSum;
-    slot["totalGrindTime"] = gSum;
-    if(gSum != 0) slot["averageGrindTime"] = gSum/grindLog.size();
-    else slot["averageGrindTime"] = 0;
     slot["ssid"] = WiFi.SSID();
     slot["ip"] = WiFi.localIP();
     slot["mac"] = WiFi.macAddress();

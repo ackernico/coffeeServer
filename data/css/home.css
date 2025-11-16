@@ -90,7 +90,7 @@ label, .textLabels
     pointer-events: none;
 
     gap: 20px;
-    height: 40%;
+    height: 55%;
     width: 10%;
     font-size: 30px;
     border-radius: 20px;
@@ -234,28 +234,28 @@ table
 
 @keyframes shape1
 {
-    0%  { transform: translate(-90px, -40px);} /*1*/
+    0%, 100%  { transform: translate(-90px, -40px);} /*1*/
     25% { transform: translate(50px, -40px);}  /*3*/
     50% { transform: translate(90px, 40px);}   /*4*/
     75% { transform: translate(-30px, 40px);}  /*2*/
 }
 @keyframes shape2
 {
-    0%  { transform: translate(-30px, 40px);} 
+    0%, 100%  { transform: translate(-30px, 40px);} 
     25% { transform: translate(-90px, -40px);} 
     50% { transform: translate(50px, -40px);}  
     75% { transform: translate(90px, 40px);}
 }
 @keyframes shape3
 {
-    0%  { transform: translate(50px, -40px);} 
+    0%, 100%  { transform: translate(50px, -40px);} 
     25% { transform: translate(90px, 40px);}  
     50% { transform: translate(-30px, 40px);} 
     75% { transform: translate(-90px, -40px);}
 }
 @keyframes shape4
 {
-    0%  { transform: translate(90px, 40px);}  
+    0%, 100%  { transform: translate(90px, 40px);}  
     25% { transform: translate(-30px, 40px);} 
     50% { transform: translate(-90px, -40px);} 
     75% { transform: translate(50px, -40px);}

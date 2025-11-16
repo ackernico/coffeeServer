@@ -19,6 +19,7 @@ let timerID = null;
 let currentScreen = 'home';
 let nextAlarmWatcherStarted = false;
 let lastAlarmCheckMinute = null;
+let infoIntervalId = null;
 
 const sectionContent = [];
 
@@ -143,11 +144,9 @@ function loadContent(content) {
             }
             function computeAndShowNextAlarm() {
                 if (!Array.isArray(alarms) || alarms.length === 0) {
-                    const nName = document.getElementById('nextAlarmName');
-                    const nTime = document.getElementById('nextAlarmTime');
+                    const nName = document.getElementById('nextAlarm');
                     const nRem = document.getElementById('nextAlarmRemains');
-                    if (nName) nName.innerText = "—";
-                    if (nTime) nTime.innerText = "—:—";
+                    if (nName) nName.innerText = "———————";
                     if (nRem) nRem.innerText = "";
                     return;
                 }
@@ -172,11 +171,9 @@ function loadContent(content) {
                 if (!next || !isFinite(next.diff)) return;
 
                 const a = alarms[next.index];
-                const nameEl = document.getElementById('nextAlarmName');
-                const timeEl = document.getElementById('nextAlarmTime');
+                const El = document.getElementById('nextAlarm');
                 const remEl = document.getElementById('nextAlarmRemains');
-                if (nameEl) nameEl.innerText = a.name || "Alarm";
-                if (timeEl) timeEl.innerText = String(Number(a.timeH)).padStart(2, '0') + ":" + String(Number(a.timeM)).padStart(2, '0');
+                if (El) El.innerText = a.name + " at " + String(Number(a.timeH)).padStart(2, '0') + ":" + String(Number(a.timeM)).padStart(2, '0');
 
                 let remHours = Math.floor(next.diff / 60);
                 let remMinutes = next.diff % 60;
@@ -222,18 +219,33 @@ function loadContent(content) {
         case 'info':
             currentScreen = 'info';
             talk2ESP32("GET", "/info").then((data) => {
-                const grindTime = data.totalGrindTime;
-                const avgTime = data.averageGrindTime;
+                let timeSum = 0;
+                let powerSum = 0;
 
-                document.getElementById('totalPower').innerText = data.totalPower + " W";
-                document.getElementById('totalGrindTime').innerText = seconds2minutes(grindTime);
-                document.getElementById('averageGrindTime').innerText = seconds2minutes(avgTime);
+                for(let i=0 ; i<grindData.length ; i++)
+                {
+                    let hour = Number(String(grindData[i].duration).substring(0, String(grindData[i].duration).indexOf(":")));
+                    let minute = Number(String(grindData[i].duration).substring(String(grindData[i].duration).indexOf(":")+1, String(grindData[i].duration).length));
+
+                    powerSum += Number(grindData[i].power);
+                    timeSum += (hour*60) + minute;
+                }
+
+                document.getElementById('totalPower').innerText = Math.round(powerSum) + " W";
+                document.getElementById('totalGrindTime').innerText = seconds2minutes(timeSum);
+                document.getElementById('averageGrindTime').innerText = seconds2minutes(timeSum/grindData.length);
 
                 document.getElementById('ssid').innerText = data.ssid;
                 document.getElementById('ip').innerText = data.ip;
                 document.getElementById('mac').innerText = data.mac;
-                document.getElementById('uptime').innerText = data.uptime;
-                document.getElementById('signalStrength').innerText = data.signalStrength;
+                document.getElementById('uptime').innerText = seconds2minutes(data.uptime / 1000, true);
+
+                let stringth;
+                if (Number(data.signalStrength) >= -30) stringth = "Excellent" + " (" + data.signalStrength + " dBm)";
+                else if (Number(data.signalStrength) <= -67 && Number(data.signalStrength) >= -80) stringth = "Moderate" + " (" + data.signalStrength + " dBm)";
+                else if (Number(data.signalStrength) <= -80 && Number(data.signalStrength) >= -90) stringth = "Weak" + " (" + data.signalStrength + " dBm)";
+                else if (Number(data.signalStrength) <= -90) stringth = "Very weak" + " (" + data.signalStrength + " dBm)";
+                document.getElementById('signalStrength').innerText = stringth;
             });
             break;
         default:
@@ -405,7 +417,7 @@ function insertRecent(duration, date, power, loadInsert = false) {
 
     tableDuration.innerText = duration;
     tableDate.innerText = date;
-    tablePower.innerText = power;
+    tablePower.innerText = power + " W";
 }
 
 function eraseData(type) {
@@ -415,14 +427,22 @@ function eraseData(type) {
     talk2ESP32('POST', "/erase", { type: type });
 }
 
-function seconds2minutes(seconds) {
+function seconds2minutes(seconds, decimal = false) {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     const hours = Math.floor(mins / 60);
 
-    if (mins > 0) return String(mins).padStart(2, '0') + "m " + String(secs).padStart(2, '0') + "s";
-    else if (hours > 0) return String(hours).padStart(2, '0') + "h " + String(mins % 60).padStart(2, '0') + "m" + String(secs).padStart(2, '0') + "s";
-    else return String(secs).padStart(2, '0') + "s";
+    if (decimal) {
+        if (mins > 0) return String(mins).padStart(2, '0') + "m " + String(secs.toFixed(2)).padStart(2, '0') + "s";
+        else if (hours > 0) return String(hours).padStart(2, '0') + "h " + String(mins % 60).padStart(2, '0') + "m" + String(secs.toFixed(2)).padStart(2, '0') + "s";
+        else return String(secs.toFixed(2)).padStart(2, '0') + "s";
+    }
+    else {
+        if (mins > 0) return String(mins).padStart(2, '0') + "m " + String(secs).padStart(2, '0') + "s";
+        else if (hours > 0) return String(hours).padStart(2, '0') + "h " + String(mins % 60).padStart(2, '0') + "m" + String(secs).padStart(2, '0') + "s";
+        else return String(secs).padStart(2, '0') + "s";
+    }
+
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -455,19 +475,18 @@ sections.forEach(sec => {
         sections.forEach(j => j.classList.remove('active'));
         sec.classList.add('active');
         setTimeout(() => {
-            switch(sec.id)
-            {
-                case 'home': 
+            switch (sec.id) {
+                case 'home':
                     document.body.classList.add('moveHome');
                     document.body.classList.remove('moveSchedule');
                     document.body.classList.remove('moveInfo');
                     break;
-                case 'schedule': 
+                case 'schedule':
                     document.body.classList.remove('moveHome');
                     document.body.classList.add('moveSchedule');
                     document.body.classList.remove('moveInfo');
                     break;
-                case 'info': 
+                case 'info':
                     document.body.classList.remove('moveHome');
                     document.body.classList.remove('moveSchedule');
                     document.body.classList.add('moveInfo');
@@ -483,7 +502,7 @@ sections.forEach(sec => {
 socket.onmessage = function (event) {
     let data = JSON.parse(event.data);
     let buttonState = data.state;
-    let power = data.power;
+    let current = data.power;
     let registerGrind = data.register;
     let avgPower = data.avgPower;
     let measure = data.measure;
@@ -492,7 +511,10 @@ socket.onmessage = function (event) {
     let alarmHour = data.hour;
     let alarmMinute = data.minute;
 
-    if (measure) document.getElementById('measurePower').innerText = power + " W";
+    let power = current * 3.7;
+
+    if (measure) document.getElementById('measurePower').innerText = Number(power.toFixed(2)) + " W";
+    if (measure) document.getElementById('measureCurrent').innerText = current + " A";
 
     if (buttonState) document.getElementById('onoffButton').click();
 
@@ -509,7 +531,7 @@ socket.onmessage = function (event) {
         {
             duration: dur,
             date: dat,
-            power: avgPower
+            power: Number(avgPower*3.7)
         };
         grindData.push(newEntry);
         insertRecent(newEntry.duration, newEntry.date, newEntry.power);

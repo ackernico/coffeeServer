@@ -65,11 +65,12 @@ int editMinute = 0;
 int processingSeconds = 0;
 int processingMinutes = 0;
 int proccesingPrint = 0;
+int angle = 0;
 
 float power;
 
 long sendPower;
-long offTimer;
+long offTimer;  
 long processTimer = 0;
 long startTime = 0;
 long elapsedTime = 0;
@@ -267,8 +268,7 @@ void setup() {
   listDir();
   configServer();
   loadAlarms();
-  loadLogs();
-
+  //loadLogs();
   soundON();
 }
 
@@ -284,7 +284,6 @@ void loop()
     lcd.setCursor(0, 0);
     lcd.print("Add new alarm:");
     buzzer.sound(NOTE_F7, 80);
-    lcd.blink_on();
     counter = 0;
     Serial.println("Mode: Alarm editor");
     delay(200);
@@ -325,7 +324,6 @@ void loop()
     {
       currentMode = NORMAL;
       buzzer.sound(NOTE_B7, 80);
-      lcd.blink_off();
       lcd.clear();
       initialMessage(true);
       delay(200);
@@ -467,18 +465,21 @@ void loop()
       elapsedTime = millis() - startTime;
     }
 
-    if (elapsedTime < 1000) servo.write(19);
-    else if (elapsedTime > 1000 && elapsedTime < 6000) servo.write(25);
-    else if (elapsedTime > 6000 && elapsedTime < 12000) servo.write(20);
-    else if (elapsedTime > 12000 && elapsedTime < 20000) servo.write(15);
-    else if (elapsedTime > 20000 && elapsedTime < 30000) servo.write(5);
-    else if (elapsedTime > 40000) servo.write(0);
+    unsigned long cycle = elapsedTime % 7500;
+
+    if (cycle < 500) servo.write(20); 
+    else servo.write(45);
 
     if (millis() - sendPower >= 400) {
       power = analogFilter(measurePin, 2500);
       String socketMsg = "{\"measure\":\"true\",\"power\":\"" + String(power) + "\"}";
       ws.textAll(socketMsg);
       sendPower = millis();
+
+      lcd.setCursor(0, 1);
+      lcd.print("Current: ");
+      lcd.print(power);
+      lcd.print(" A");
 
       powerSum += (power * 100);
       powerSamples++;
