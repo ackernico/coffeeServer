@@ -268,7 +268,7 @@ void setup() {
   listDir();
   configServer();
   loadAlarms();
-  //loadLogs();
+  loadLogs();
   soundON();
 }
 
@@ -465,9 +465,9 @@ void loop()
       elapsedTime = millis() - startTime;
     }
 
-    unsigned long cycle = elapsedTime % 7500;
+    unsigned long cycle = elapsedTime % 3500;
 
-    if (cycle < 500) servo.write(20); 
+    if (cycle < 150) servo.write(20); 
     else servo.write(45);
 
     if (millis() - sendPower >= 400) {

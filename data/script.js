@@ -429,7 +429,7 @@ function eraseData(type) {
 
 function seconds2minutes(seconds, decimal = false) {
     const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
+    const secs = Math.round(seconds % 60);
     const hours = Math.floor(mins / 60);
 
     if (decimal) {
@@ -531,7 +531,7 @@ socket.onmessage = function (event) {
         {
             duration: dur,
             date: dat,
-            power: Number(avgPower*3.7)
+            power: Number(avgPower*3.7).toFixed(2),
         };
         grindData.push(newEntry);
         insertRecent(newEntry.duration, newEntry.date, newEntry.power);

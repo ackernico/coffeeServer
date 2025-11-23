@@ -157,6 +157,12 @@ table
     padding: 15px 20px 15px 20px;
 }
 
+th
+{
+    position: sticky;
+    background-color: var(--tone4h5);
+}
+
 #recentTable
 {
     padding-left: 150px;
